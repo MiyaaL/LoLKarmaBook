@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "source": "synthetic",
+  "scope": {
+    "operator": "synthetic",
+    "realm": "disconnected-realm",
+    "queue": "synthetic-queue",
+    "patch": "demo-patch-1"
+  },
+  "matches": [
+    {
+      "matchId": "disconnected-001",
+      "timestamp": "2026-02-01T00:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:a1",
+        "synthetic:a2",
+        "synthetic:a3",
+        "synthetic:a4",
+        "synthetic:a5"
+      ],
+      "teamB": [
+        "synthetic:b1",
+        "synthetic:b2",
+        "synthetic:b3",
+        "synthetic:b4",
+        "synthetic:b5"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "disconnected-002",
+      "timestamp": "2026-02-01T01:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:c1",
+        "synthetic:c2",
+        "synthetic:c3",
+        "synthetic:c4",
+        "synthetic:c5"
+      ],
+      "teamB": [
+        "synthetic:d1",
+        "synthetic:d2",
+        "synthetic:d3",
+        "synthetic:d4",
+        "synthetic:d5"
+      ],
+      "winner": "B"
+    },
+    {
+      "matchId": "disconnected-001",
+      "timestamp": "2026-02-01T00:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:a5",
+        "synthetic:a4",
+        "synthetic:a3",
+        "synthetic:a2",
+        "synthetic:a1"
+      ],
+      "teamB": [
+        "synthetic:b5",
+        "synthetic:b4",
+        "synthetic:b3",
+        "synthetic:b2",
+        "synthetic:b1"
+      ],
+      "winner": "A"
+    }
+  ]
+}

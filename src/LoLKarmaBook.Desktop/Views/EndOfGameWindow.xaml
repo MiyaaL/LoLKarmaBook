@@ -1,0 +1,161 @@
+<Window x:Class="LoLKarmaBook.Desktop.Views.EndOfGameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:LoLKarmaBook.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:EndOfGameViewModel}"
+        Title="本局记录"
+        Icon="pack://application:,,,/Assets/app-icon.ico"
+        Width="520" SizeToContent="Height" MaxHeight="640"
+        WindowStyle="None" ResizeMode="NoResize"
+        ShowInTaskbar="False" ShowActivated="False" Topmost="True"
+        WindowStartupLocation="Manual"
+        Background="{StaticResource Brush.Surface}"
+        BorderBrush="{StaticResource Brush.Accent}" BorderThickness="1"
+        FontFamily="{StaticResource Font.Ui}"
+        FontSize="{StaticResource Size.Body}"
+        Foreground="{StaticResource Brush.Text}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display">
+  <Border CornerRadius="0">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <!-- 标题栏 -->
+      <Grid Grid.Row="0" Background="{StaticResource Brush.SurfaceRaised}" MouseLeftButtonDown="OnHeaderDrag">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,10,0,10" VerticalAlignment="Center">
+          <Image Source="/Assets/app-icon.ico" Width="24" Height="24" RenderOptions.BitmapScalingMode="HighQuality" />
+          <TextBlock Text="本局记录" Margin="8,0,0,0" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Muted}" Margin="10,0,0,0"
+                     VerticalAlignment="Center" FontSize="11.5" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <Button Grid.Column="1" Style="{StaticResource Button.Quiet}" Click="OnCloseClick"
+                Margin="0,4,6,4" Padding="8,4" AutomationProperties.Name="关闭本局记录窗口">
+          <Path Data="{StaticResource Icon.Close}" Style="{StaticResource Icon16}" Width="12" Height="12"
+                Stroke="{StaticResource Brush.TextMuted}" />
+        </Button>
+      </Grid>
+
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,10,14,4">
+        <StackPanel>
+          <!-- 再遇记录 -->
+          <Border Style="{StaticResource CardInset}" Padding="12,10" Margin="0,0,0,10"
+                  BorderBrush="{StaticResource Brush.Warning}"
+                  Visibility="{Binding HasReminders, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Text="再次相遇" Style="{StaticResource Text.Label}" />
+              <TextBlock Text="{Binding RemindersHeading}" Style="{StaticResource Text.Body}" Margin="0,3,0,0" TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding Reminders}" Margin="0,6,0,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:EndOfGameReminderViewModel}">
+                    <Grid Margin="0,4,0,0">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Grid.Column="0">
+                        <TextBlock Style="{StaticResource Text.Body}">
+                          <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="（" /><Run Text="{Binding Side, Mode=OneWay}" /><Run Text="）" />
+                        </TextBlock>
+                        <TextBlock Text="{Binding CategoriesText}" Style="{StaticResource Text.Muted}"
+                                   Foreground="{StaticResource Brush.Warning}" />
+                        <TextBlock Style="{StaticResource Text.Muted}">
+                          <Run Text="{Binding MostRecent, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding SessionCountText, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock Text="{Binding NotesSummary}" Style="{StaticResource Text.Muted}" />
+                      </StackPanel>
+                      <Button Grid.Column="1" Style="{StaticResource Button.Row}" Content="不再显示"
+                              Command="{Binding IgnoreCommand}" VerticalAlignment="Top" Margin="10,0,0,0"
+                              ToolTip="只关闭这个窗口里的提示，不改动记录。" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <!-- 标记玩家 -->
+          <TextBlock Text="{Binding PlayersHeading}" Style="{StaticResource Text.Label}" TextWrapping="Wrap" />
+          <ListBox ItemsSource="{Binding Players}" SelectedItem="{Binding SelectedPlayer, Mode=TwoWay}"
+                   Background="Transparent" BorderThickness="0" Margin="0,6,0,0" MaxHeight="190"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:EndOfGamePlayerViewModel}">
+                <StackPanel Orientation="Horizontal" Margin="2,3">
+                  <TextBlock Text="{Binding DisplayId}" Style="{StaticResource Text.Body}" />
+                  <TextBlock Text="{Binding ChampionOrDash}" Style="{StaticResource Text.Muted}" Margin="8,0,0,0"
+                             Foreground="{StaticResource Brush.Accent}" />
+                  <TextBlock Text="{Binding SideText}" Style="{StaticResource Text.Muted}" Margin="8,0,0,0" />
+                  <TextBlock Text="{Binding DisabledReason}" Style="{StaticResource Text.Muted}" Margin="8,0,0,0" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.ItemContainerStyle>
+              <Style TargetType="ListBoxItem" BasedOn="{StaticResource ListBoxItem.Selectable}">
+                <Setter Property="AutomationProperties.Name" Value="{Binding DisplayId}" />
+                <Setter Property="IsEnabled" Value="{Binding CanReceiveNote}" />
+                <Setter Property="ToolTip" Value="{Binding DisabledReason}" />
+                <Setter Property="Padding" Value="6,2" />
+              </Style>
+            </ListBox.ItemContainerStyle>
+          </ListBox>
+
+          <TextBlock Text="行为（可多选）" Style="{StaticResource Text.Label}" Margin="0,10,0,0" />
+          <ItemsControl ItemsSource="{Binding Categories}" Margin="0,4,0,0">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:CategoryChoiceViewModel}">
+                <CheckBox Style="{StaticResource CheckBox.Chip}" Content="{Binding DisplayName}"
+                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                          Tag="{Binding IconKey, Converter={StaticResource IconGeometry}}"
+                          ToolTip="{Binding Hint}"
+                          AutomationProperties.Name="{Binding DisplayName}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBox Text="{Binding Body, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                   Margin="0,10,0,0" MinHeight="52" MaxLength="500" AcceptsReturn="True"
+                   TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                   AutomationProperties.Name="本局备注（选填）"
+                   Style="{StaticResource TextBox.Multiline}" />
+
+          <TextBlock Text="{Binding Message}" Margin="0,8,0,0" TextWrapping="Wrap"
+                     Foreground="{Binding MessageSeverity, Converter={StaticResource SeverityTextBrush}}"
+                     Visibility="{Binding HasMessage, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <Border Grid.Row="2" Background="{StaticResource Brush.SurfaceRaised}" Padding="14,10">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Button Grid.Column="0" Style="{StaticResource Button.Quiet}" Content="暂不标记"
+                  Command="{Binding DismissCommand}" HorizontalAlignment="Left" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <Button Style="{StaticResource Button.Secondary}" Content="保存记录"
+                    Command="{Binding SaveCommand}" Margin="0,0,8,0" />
+            <Button Style="{StaticResource Button.Primary}" Content="完成" Click="OnCloseClick" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

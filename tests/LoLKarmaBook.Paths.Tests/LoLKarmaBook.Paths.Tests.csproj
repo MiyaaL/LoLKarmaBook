@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/LoLKarmaBook.Storage/LoLKarmaBook.Storage.csproj" />
+    <Compile Include="../../src/LoLKarmaBook.Desktop/Infrastructure/AppPaths.cs" Link="Production/AppPaths.cs" />
+    <Compile Include="../../src/LoLKarmaBook.Desktop/Infrastructure/DesktopSettings.cs" Link="Production/DesktopSettings.cs" />
+    <Compile Include="../../src/LoLKarmaBook.Desktop/Infrastructure/DataRootLocation.cs" Link="Production/DataRootLocation.cs" />
+    <Compile Include="../../src/LoLKarmaBook.Desktop/Infrastructure/PathRelocation.cs" Link="Production/PathRelocation.cs" />
+    <Compile Include="../../src/LoLKarmaBook.Desktop/Services/ProfileWorkspace.cs" Link="Production/ProfileWorkspace.cs" />
+    <Compile Include="../../src/LoLKarmaBook.Desktop/Services/ProfileCatalog.cs" Link="Production/ProfileCatalog.cs" />
+  </ItemGroup>
+</Project>

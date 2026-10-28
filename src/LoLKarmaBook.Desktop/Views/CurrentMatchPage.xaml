@@ -1,0 +1,432 @@
+<UserControl x:Class="LoLKarmaBook.Desktop.Views.CurrentMatchPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:LoLKarmaBook.Desktop.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:CurrentMatchViewModel}"
+             d:DesignWidth="1000" d:DesignHeight="700">
+
+  <UserControl.Resources>
+    <!-- 名单行：名字 / 英雄 / 历史摘要 / 身份标签 -->
+    <DataTemplate x:Key="RosterRowTemplate" DataType="{x:Type vm:RosterRowViewModel}">
+      <Border x:Name="RowBorder" Background="Transparent" BorderBrush="Transparent"
+              BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,4">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="{Binding DisplayName}" Style="{StaticResource Text.Body}" FontWeight="SemiBold"
+                       TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding DisplayName}" />
+            <WrapPanel Margin="0,3,0,0">
+              <TextBlock Text="已选择" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.Accent}"
+                         Margin="0,0,8,0" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}" />
+              <Border Style="{StaticResource Badge}" Padding="6,1" Margin="8,0,0,0"
+                      Visibility="{Binding HasHistory, Converter={StaticResource BoolToVis}}"
+                      Background="{StaticResource Brush.WarningSoft}" BorderBrush="{StaticResource Brush.Warning}">
+                <TextBlock Text="有历史记录" FontSize="10.5" Foreground="{StaticResource Brush.Warning}" />
+              </Border>
+            </WrapPanel>
+            <TextBlock Text="本人" Style="{StaticResource Text.Muted}" Margin="0,2,0,0"
+                       Visibility="{Binding IsSelf, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Text="{Binding HistoryText}" Style="{StaticResource Text.Muted}" Margin="0,2,0,0"
+                       Foreground="{Binding HasHistory, Converter={StaticResource SeverityBrush}, ConverterParameter=warning}"
+                       Visibility="{Binding HasHistory, Converter={StaticResource BoolToVis}}"
+                       TextWrapping="Wrap" ToolTip="{Binding HistoryTooltip}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding IsHidden}" Value="True">
+          <Setter TargetName="RowBorder" Property="Opacity" Value="0.7" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsSelf}" Value="True">
+          <Setter TargetName="RowBorder" Property="Background" Value="{StaticResource Brush.AccentSoft}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding HasHistory}" Value="True">
+          <Setter TargetName="RowBorder" Property="BorderBrush" Value="{StaticResource Brush.Warning}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+          <Setter TargetName="RowBorder" Property="Background" Value="{StaticResource Brush.AccentSoft}" />
+          <Setter TargetName="RowBorder" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- 标题与实时状态集中展示，诊断操作按需展开。 -->
+    <Border Grid.Row="0" Style="{StaticResource Card}" Padding="16,10" Margin="0,0,0,10">
+      <StackPanel>
+        <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+          <TextBlock Text="当前对局" Style="{StaticResource Text.Heading}" Margin="0,0,12,0" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding SessionTitle}" Style="{StaticResource Text.Muted}"
+                     VerticalAlignment="Center" Margin="0,0,12,0" />
+          <Button Content="标记上一局" Style="{StaticResource Button.Row}" Margin="0,0,0,0"
+                  HorizontalAlignment="Left"
+                  Command="{Binding MarkLastMatchCommand}"
+                  Visibility="{Binding CanMarkLastMatch, Converter={StaticResource BoolToVis}}"
+                  ToolTip="打开赛后标记窗口，选择这一局的玩家与行为。" />
+        </WrapPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                    Visibility="{Binding IsDemoMode, Converter={StaticResource BoolToVis}}">
+          <StackPanel Margin="0,0,10,0">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton GroupName="SyntheticScenario" Style="{StaticResource Tab.Pill}"
+                           Content="对局 A"
+                           IsChecked="{Binding IsScenarioA, Mode=OneWay}"
+                           Command="{Binding ScenarioACommand}"
+                           AutomationProperties.Name="加载模拟对局 A"
+                           ToolTip="演示玩家X 作为队友出现；在此保存记录后切到 B。"
+                           Padding="14,7" />
+              <RadioButton GroupName="SyntheticScenario" Style="{StaticResource Tab.Pill}"
+                           Content="对局 B"
+                           IsChecked="{Binding IsScenarioB, Mode=OneWay}"
+                           Command="{Binding ScenarioBCommand}"
+                           AutomationProperties.Name="加载模拟对局 B"
+                           ToolTip="演示玩家X 改名但同一稳定身份，另有同名不同身份玩家Y。"
+                           Padding="14,7" Margin="0" />
+            </StackPanel>
+          </StackPanel>
+        </StackPanel>
+        </Grid>
+        <TextBlock Text="{Binding DataContext.ClientStatusText, RelativeSource={RelativeSource AncestorType=Window}}"
+                   Style="{StaticResource Text.Body}" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" />
+        <Expander Header="连接与对局详情" Margin="0,5,0,0" Foreground="{StaticResource Brush.TextMuted}"
+                  FontSize="12" IsExpanded="False" HorizontalContentAlignment="Stretch">
+          <StackPanel Margin="0,6,0,0">
+            <TextBlock Text="{Binding SessionMeta}" Style="{StaticResource Text.Muted}" />
+            <TextBlock Text="{Binding ScenarioDescription}" Style="{StaticResource Text.Muted}" />
+            <StackPanel DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
+              <WrapPanel>
+                <TextBlock Text="{Binding ClientAccountText}" Style="{StaticResource Text.Muted}" Margin="0,0,16,0" />
+                <TextBlock Text="{Binding ClientPhaseText}" Style="{StaticResource Text.Muted}" />
+              </WrapPanel>
+              <WrapPanel Margin="0,6,0,0">
+                <Button Content="重新检测" Style="{StaticResource Button.Row}" Command="{Binding ReconnectClientCommand}" Margin="0,0,8,4" />
+                <Button Content="选择客户端目录" Style="{StaticResource Button.Row}" Command="{Binding ChooseClientDirectoryCommand}" Margin="0,0,8,4" />
+                <Button Content="实时对局" Style="{StaticResource Button.Row}" Command="{Binding RealtimeModeCommand}" Margin="0,0,0,4" />
+              </WrapPanel>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </Border>
+
+    <!-- 名单随宽度收缩，编辑区始终拥有完整高度。 -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" MinWidth="220" MaxWidth="300" />
+        <ColumnDefinition Width="12" />
+        <ColumnDefinition Width="2*" MinWidth="360" />
+      </Grid.ColumnDefinitions>
+
+      <!-- ============ 名单 ============ -->
+      <Border Grid.Column="0" Style="{StaticResource Card}" Padding="10,12">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <Grid Grid.Row="0" Margin="4,0,4,8">
+            <TextBlock Text="本局名单" Style="{StaticResource Text.Heading}" />
+          </Grid>
+
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+              <TextBlock Text="队友" Style="{StaticResource Text.Label}" Margin="6,4,0,6" />
+              <ItemsControl ItemsSource="{Binding Allies}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:RosterRowViewModel}">
+                    <ContentControl Content="{Binding}">
+                      <ContentControl.ContentTemplate>
+                        <DataTemplate>
+                          <Button Style="{StaticResource Button.Quiet}" HorizontalContentAlignment="Stretch"
+                                  Padding="0" BorderThickness="0"
+                                  Command="{Binding DataContext.RowSelectedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                  CommandParameter="{Binding}"
+                                  AutomationProperties.Name="{Binding DisplayName}"
+                                  ToolTip="{Binding IdentityText}">
+                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RosterRowTemplate}" />
+                          </Button>
+                        </DataTemplate>
+                      </ContentControl.ContentTemplate>
+                    </ContentControl>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock Text="对手" Style="{StaticResource Text.Label}" Margin="6,10,0,6" />
+              <ItemsControl ItemsSource="{Binding Enemies}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:RosterRowViewModel}">
+                    <ContentControl Content="{Binding}">
+                      <ContentControl.ContentTemplate>
+                        <DataTemplate>
+                          <Button Style="{StaticResource Button.Quiet}" HorizontalContentAlignment="Stretch"
+                                  Padding="0" BorderThickness="0"
+                                  Command="{Binding DataContext.RowSelectedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                  CommandParameter="{Binding}"
+                                  AutomationProperties.Name="{Binding DisplayName}"
+                                  ToolTip="{Binding IdentityText}">
+                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RosterRowTemplate}" />
+                          </Button>
+                        </DataTemplate>
+                      </ContentControl.ContentTemplate>
+                    </ContentControl>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <StackPanel Visibility="{Binding OtherParticipants.Count, Converter={StaticResource CountToVis}, ConverterParameter=NonEmpty}">
+                <TextBlock Text="其他" Style="{StaticResource Text.Label}" Margin="6,10,0,6" />
+                <ItemsControl ItemsSource="{Binding OtherParticipants}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RosterRowTemplate}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
+              <TextBlock Text="等待名单" Style="{StaticResource Text.Muted}" Margin="6,4" TextWrapping="Wrap"
+                         Visibility="{Binding HasSession, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}" />
+            </StackPanel>
+          </ScrollViewer>
+          <Expander Grid.Row="2" Margin="0,10,0,0" IsExpanded="False"
+                    HorizontalContentAlignment="Stretch" Foreground="{StaticResource Brush.Warning}"
+                    Visibility="{Binding HasReminders, Converter={StaticResource BoolToVis}}"
+                    ToolTip="{Binding ReminderSummary}">
+            <Expander.Header>
+              <TextBlock Text="{Binding Reminders.Count, StringFormat=再遇提醒 · {0} 人}"
+                         FontWeight="SemiBold" FontSize="12" />
+            </Expander.Header>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170" Margin="0,8,0,0">
+              <ItemsControl ItemsSource="{Binding Reminders}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:ReminderCardViewModel}">
+                    <Border Style="{StaticResource CardInset}" Padding="8" Margin="0,0,0,8"
+                            BorderBrush="{StaticResource Brush.Warning}">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Body}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding CategoriesText}" Style="{StaticResource Text.Muted}"
+                                   Foreground="{StaticResource Brush.Warning}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Margin="0,2,0,0">
+                          <Run Text="{Binding MostRecent, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding SessionCountText, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock Text="{Binding NotesSummary}" Style="{StaticResource Text.Muted}" Margin="0,4,0,0" />
+                        <Button Style="{StaticResource Button.Row}" Content="本局忽略"
+                                Command="{Binding IgnoreCommand}" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                ToolTip="仅忽略本次对局中的这个提醒；记录本身不会被删除。"
+                                AutomationProperties.Name="本局忽略该提醒" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Expander>
+        </Grid>
+      </Border>
+
+      <!-- ============ 标记表单 ============ -->
+      <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource Card}" Padding="18,16">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <StackPanel Grid.Row="0">
+            <TextBlock Text="记录对象" Style="{StaticResource Text.Label}" Margin="0,0,0,4"
+                       Visibility="{Binding HasSelectedParticipant, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Text="{Binding SelectionHeading}" Style="{StaticResource Text.Heading}" />
+            <TextBlock Text="{Binding SelectionSubheading}" Style="{StaticResource Text.Muted}" Margin="0,3,0,0" />
+            <TextBlock Text="正在编辑已保存的记录" Style="{StaticResource Text.Muted}" Foreground="{StaticResource Brush.Warning}"
+                       Margin="0,4,0,0" Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+            <Border Style="{StaticResource CardInset}" Margin="0,10,0,0" Padding="10,8"
+                    Visibility="{Binding HasRecoveredDraftNotice, Converter={StaticResource BoolToVis}}"
+                    Background="{StaticResource Brush.AccentSoft}" BorderBrush="{StaticResource Brush.Accent}">
+              <TextBlock Text="{Binding RecoveredDraftNotice}" Style="{StaticResource Text.Muted}"
+                         Foreground="{StaticResource Brush.Accent}" />
+            </Border>
+            <TextBlock Text="{Binding AutosaveStatus}" Style="{StaticResource Text.Muted}"
+                       Foreground="{StaticResource Brush.Danger}" Margin="0,8,0,0"
+                       Visibility="{Binding IsAutosaveError, Converter={StaticResource BoolToVis}}" />
+          </StackPanel>
+
+          <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20"
+                      Visibility="{Binding HasSelectedParticipant, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
+            <Path Data="{StaticResource Icon.Shield}" Width="28" Height="28" Stretch="Uniform"
+                  Stroke="{StaticResource Brush.Accent}" StrokeThickness="1.5" HorizontalAlignment="Center" />
+            <TextBlock Text="选择玩家后开始记录" Style="{StaticResource Text.Heading}" Margin="0,12,0,0" TextAlignment="Center" />
+            <TextBlock Text="类别、标签和备注将在这里展开。" Style="{StaticResource Text.Muted}" Margin="0,6,0,0" TextAlignment="Center" />
+          </StackPanel>
+
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,8"
+                        Visibility="{Binding HasSelectedParticipant, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Text="类别（可多选）" Style="{StaticResource Text.Label}" Margin="0,0,0,6" />
+              <ItemsControl ItemsSource="{Binding Categories}" Margin="0,4,0,0">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:CategoryChipViewModel}">
+                    <CheckBox Style="{StaticResource CheckBox.Chip}"
+                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              IsEnabled="{Binding DataContext.CanChooseCategories, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                              Tag="{Binding IconKey, Converter={StaticResource IconGeometry}}"
+                              Content="{Binding DisplayName}"
+                              ToolTip="{Binding Hint}"
+                              AutomationProperties.Name="{Binding DisplayName}"
+                              AutomationProperties.HelpText="{Binding Hint}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                  <TextBlock Text="标签" Style="{StaticResource Text.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                  <TextBox Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                           Text="{Binding TagQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                           AutomationProperties.Name="搜索英雄或装备标签"
+                           AutomationProperties.HelpText="{Binding TagCatalogHint}"
+                           ToolTip="{Binding TagCatalogHint}">
+                    <TextBox.InputBindings>
+                      <KeyBinding Key="Enter" Command="{Binding AcceptTopTagCommand}" />
+                    </TextBox.InputBindings>
+                  </TextBox>
+              </Grid>
+
+
+              <ItemsControl ItemsSource="{Binding TagSuggestions}" Margin="0,6,0,0"
+                            Visibility="{Binding HasTagSuggestions, Converter={StaticResource BoolToVis}}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TagSuggestionViewModel}">
+                    <Button Style="{StaticResource Button.Row}" Margin="0,0,6,6" Padding="8,4"
+                            Command="{Binding DataContext.AddTagCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}"
+                            AutomationProperties.Name="{Binding AutomationName}"
+                            ToolTip="{Binding KindLabel}">
+                      <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource Badge}" Padding="4,0" Margin="0,0,6,0"
+                                Background="{StaticResource Brush.AccentSoft}" BorderBrush="{StaticResource Brush.Accent}">
+                          <TextBlock Text="{Binding KindBadge}" FontSize="10" Foreground="{StaticResource Brush.Accent}" />
+                        </Border>
+                        <TextBlock Text="{Binding DisplayName}" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <ItemsControl ItemsSource="{Binding Tags}" Margin="0,4,0,0"
+                            Visibility="{Binding HasTags, Converter={StaticResource BoolToVis}}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TagChipViewModel}">
+                    <Border Style="{StaticResource Badge}" Margin="0,0,6,6" Padding="8,3"
+                            Background="{StaticResource Brush.AccentSoft}" BorderBrush="{StaticResource Brush.Accent}">
+                      <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding KindLabel}" FontSize="10" Foreground="{StaticResource Brush.TextMuted}"
+                                   VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <TextBlock Text="{Binding DisplayName}" FontSize="11.5"
+                                   Foreground="{StaticResource Brush.Accent}" VerticalAlignment="Center" />
+                        <Button Command="{Binding RemoveCommand}" Content="×" Padding="4,0" Margin="6,0,0,0"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{StaticResource Brush.Accent}"
+                                ToolTip="移除这个标签"
+                                AutomationProperties.Name="{Binding RemoveLabel}" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock Text="备注（选填，最多 500 字）" Style="{StaticResource Text.Label}" Margin="0,14,0,6" />
+              <TextBox Style="{StaticResource TextBox.Multiline}"
+                       MinHeight="70"
+                       Text="{Binding NoteBody, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                       MaxLength="500"
+                       AutomationProperties.Name="备注"
+                       AutomationProperties.HelpText="建议记录你观察到的具体情境，不必复制完整聊天。" />
+              <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1" Text="{Binding NoteBodyCountText}" Style="{StaticResource Text.Muted}" Margin="8,0,0,0" />
+                <TextBlock Text="{Binding SelectedCategoriesText}" Style="{StaticResource Text.Muted}" HorizontalAlignment="Left" />
+              </Grid>
+
+              <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="提醒有效期（天数，0 为永久）" Style="{StaticResource Text.Label}" Margin="0,0,0,4" />
+                <WrapPanel>
+                  <TextBox Text="{Binding ReminderDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                           Width="120" Margin="0,0,10,4" AutomationProperties.Name="提醒有效期天数"
+                           ToolTip="天数，0 表示永久提醒。" />
+                  <Button Style="{StaticResource Button.Row}" Content="恢复默认 365 天"
+                        Command="{Binding ResetReminderDaysCommand}" VerticalAlignment="Center" Margin="0,0,0,4"
+                        AutomationProperties.Name="恢复默认提醒 365 天" />
+                </WrapPanel>
+                <TextBlock Text="{Binding ReminderDaysHint}" Style="{StaticResource Text.Muted}" TextWrapping="Wrap" />
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+
+          <WrapPanel Grid.Row="2" HorizontalAlignment="Right"
+                     Visibility="{Binding HasSelectedParticipant, Converter={StaticResource BoolToVis}}">
+              <Button Style="{StaticResource Button.Secondary}" Content="新记录 / 清空"
+                      Command="{Binding NewNoteCommand}" Margin="0,4,8,0"
+                      ToolTip="清空当前表单并丢弃自动保存的草稿。"
+                      AutomationProperties.Name="开始新记录并清空表单" />
+              <Button Style="{StaticResource Button.Secondary}" Content="取消编辑"
+                      Command="{Binding CancelEditCommand}"
+                      Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
+                      Margin="0,4,8,0" AutomationProperties.Name="取消编辑" />
+              <Button Style="{StaticResource Button.Primary}" Margin="0,4,0,0"
+                      Command="{Binding SaveCommand}"
+                      ToolTip="只有事务提交成功才显示完成；失败时保留输入并提示原因。"
+                      AutomationProperties.Name="保存记录">
+                <StackPanel Orientation="Horizontal">
+                  <Path Data="{StaticResource Icon.Save}" Style="{StaticResource Icon16}"
+                        Stroke="{StaticResource Brush.OnAccent}" />
+                  <TextBlock Text="{Binding SaveButtonText}" Margin="7,0,0,0" />
+                </StackPanel>
+              </Button>
+          </WrapPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><RootNamespace>LoLKarmaBook.Client</RootNamespace></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../LoLKarmaBook.Core/LoLKarmaBook.Core.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../LoLKarmaBook.Scoring/LoLKarmaBook.Scoring.csproj" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="riotgames.pem" /></ItemGroup>
+</Project>

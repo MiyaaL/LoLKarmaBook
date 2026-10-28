@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>LoLKarmaBook.Desktop</RootNamespace>
+    <AssemblyName>LoLKarmaBook</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
+    <Product>LoLKarmaBook</Product>
+    <AssemblyTitle>LoLKarmaBook</AssemblyTitle>
+    <Description>LOL 客户端实时对局检测、玩家记录与对局表现分。</Description>
+    <Version>1.0.0</Version>
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Notification-area icon only (NotifyIcon); no WinForms windows are used. -->
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
+
+<ItemGroup>
+    <ProjectReference Include="..\LoLKarmaBook.Core\LoLKarmaBook.Core.csproj" />
+    <ProjectReference Include="..\LoLKarmaBook.Storage\LoLKarmaBook.Storage.csproj" />
+    <ProjectReference Include="..\LoLKarmaBook.Scoring\LoLKarmaBook.Scoring.csproj" />
+    <ProjectReference Include="..\LoLKarmaBook.Riot\LoLKarmaBook.Riot.csproj" />
+    <ProjectReference Include="..\LoLKarmaBook.Client\LoLKarmaBook.Client.csproj" />
+    <ProjectReference Include="..\LoLKarmaBook.Hexdata\LoLKarmaBook.Hexdata.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Inline vector icons: no external image assets are shipped. -->
+    <Resource Include="Assets\*.xaml" />
+    <Resource Include="Assets\app-icon.ico" />
+    <Resource Include="Assets\app-icon.png" />
+  </ItemGroup>
+
+</Project>

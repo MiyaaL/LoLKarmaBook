@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><RootNamespace>LoLKarmaBook.Riot</RootNamespace></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../LoLKarmaBook.Scoring/LoLKarmaBook.Scoring.csproj" /></ItemGroup>
+</Project>

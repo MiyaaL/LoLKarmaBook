@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "source": "synthetic",
+  "scope": {
+    "operator": "synthetic",
+    "realm": "demo-realm",
+    "queue": "synthetic-queue",
+    "patch": "demo-patch-1"
+  },
+  "matches": [
+    {
+      "matchId": "demo-rating-001",
+      "timestamp": "2026-01-01T00:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p00",
+        "synthetic:p01",
+        "synthetic:p02",
+        "synthetic:p03"
+      ],
+      "teamB": [
+        "synthetic:p04",
+        "synthetic:p05",
+        "synthetic:p06",
+        "synthetic:p07",
+        "synthetic:p08"
+      ],
+      "winner": "B"
+    },
+    {
+      "matchId": "demo-rating-002",
+      "timestamp": "2026-01-01T01:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p07",
+        "synthetic:p08",
+        "synthetic:p09",
+        "synthetic:p10",
+        "synthetic:p11"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p03",
+        "synthetic:p04",
+        "synthetic:p05",
+        "synthetic:p06"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-003",
+      "timestamp": "2026-01-01T02:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p06",
+        "synthetic:p07",
+        "synthetic:p08",
+        "synthetic:p09"
+      ],
+      "teamB": [
+        "synthetic:p10",
+        "synthetic:p11",
+        "synthetic:p12",
+        "synthetic:p13",
+        "synthetic:p14"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-004",
+      "timestamp": "2026-01-01T03:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p13",
+        "synthetic:p14",
+        "synthetic:p15",
+        "synthetic:p16",
+        "synthetic:p17"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p09",
+        "synthetic:p10",
+        "synthetic:p11",
+        "synthetic:p12"
+      ],
+      "winner": "B"
+    },
+    {
+      "matchId": "demo-rating-005",
+      "timestamp": "2026-01-01T04:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p12",
+        "synthetic:p13",
+        "synthetic:p14",
+        "synthetic:p15"
+      ],
+      "teamB": [
+        "synthetic:p16",
+        "synthetic:p17",
+        "synthetic:p00",
+        "synthetic:p01",
+        "synthetic:p02"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-006",
+      "timestamp": "2026-01-01T05:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p01",
+        "synthetic:p02",
+        "synthetic:p03",
+        "synthetic:p04",
+        "synthetic:p05"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p15",
+        "synthetic:p16",
+        "synthetic:p17",
+        "synthetic:p00"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-007",
+      "timestamp": "2026-01-01T06:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p00",
+        "synthetic:p01",
+        "synthetic:p02",
+        "synthetic:p03"
+      ],
+      "teamB": [
+        "synthetic:p04",
+        "synthetic:p05",
+        "synthetic:p06",
+        "synthetic:p07",
+        "synthetic:p08"
+      ],
+      "winner": "B"
+    },
+    {
+      "matchId": "demo-rating-008",
+      "timestamp": "2026-01-01T07:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p07",
+        "synthetic:p08",
+        "synthetic:p09",
+        "synthetic:p10",
+        "synthetic:p11"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p03",
+        "synthetic:p04",
+        "synthetic:p05",
+        "synthetic:p06"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-009",
+      "timestamp": "2026-01-01T08:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p06",
+        "synthetic:p07",
+        "synthetic:p08",
+        "synthetic:p09"
+      ],
+      "teamB": [
+        "synthetic:p10",
+        "synthetic:p11",
+        "synthetic:p12",
+        "synthetic:p13",
+        "synthetic:p14"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-010",
+      "timestamp": "2026-01-01T09:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p13",
+        "synthetic:p14",
+        "synthetic:p15",
+        "synthetic:p16",
+        "synthetic:p17"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p09",
+        "synthetic:p10",
+        "synthetic:p11",
+        "synthetic:p12"
+      ],
+      "winner": "B"
+    },
+    {
+      "matchId": "demo-rating-011",
+      "timestamp": "2026-01-01T10:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p12",
+        "synthetic:p13",
+        "synthetic:p14",
+        "synthetic:p15"
+      ],
+      "teamB": [
+        "synthetic:p16",
+        "synthetic:p17",
+        "synthetic:p00",
+        "synthetic:p01",
+        "synthetic:p02"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-012",
+      "timestamp": "2026-01-01T11:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p01",
+        "synthetic:p02",
+        "synthetic:p03",
+        "synthetic:p04",
+        "synthetic:p05"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p15",
+        "synthetic:p16",
+        "synthetic:p17",
+        "synthetic:p00"
+      ],
+      "winner": "A"
+    },
+    {
+      "matchId": "demo-rating-013",
+      "timestamp": "2026-01-01T12:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:target",
+        "synthetic:p00",
+        "synthetic:p01",
+        "synthetic:p02",
+        "synthetic:p03"
+      ],
+      "teamB": [
+        "synthetic:p04",
+        "synthetic:p05",
+        "synthetic:p06",
+        "synthetic:p07",
+        "synthetic:p08"
+      ],
+      "winner": "B"
+    },
+    {
+      "matchId": "demo-rating-014",
+      "timestamp": "2026-01-01T13:00:00+00:00",
+      "scope": null,
+      "teamA": [
+        "synthetic:p07",
+        "synthetic:p08",
+        "synthetic:p09",
+        "synthetic:p10",
+        "synthetic:p11"
+      ],
+      "teamB": [
+        "synthetic:target",
+        "synthetic:p03",
+        "synthetic:p04",
+        "synthetic:p05",
+        "synthetic:p06"
+      ],
+      "winner": "A"
+    }
+  ]
+}

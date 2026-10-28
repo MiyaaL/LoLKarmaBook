@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "source": "user-owned-completed-matches",
+  "matches": [
+    {
+      "matchId": "missing-001",
+      "win": true,
+      "kills": 5,
+      "deaths": 2,
+      "assists": 7,
+      "teamTotalKills": 0,
+      "totalDamageDealt": 0,
+      "teamTotalDamageDealt": 0,
+      "totalDamageTaken": 0,
+      "teamTotalDamageTaken": 0,
+      "goldEarned": 0,
+      "teamTotalGoldEarned": 0
+    },
+    {
+      "matchId": "missing-002",
+      "win": false,
+      "kills": 4,
+      "deaths": 1,
+      "assists": 6,
+      "teamTotalKills": 10,
+      "totalDamageDealt": 100,
+      "teamTotalDamageDealt": 100,
+      "totalDamageTaken": 20,
+      "teamTotalDamageTaken": 20,
+      "goldEarned": 50,
+      "teamTotalGoldEarned": 50
+    },
+    {
+      "matchId": "missing-003",
+      "win": true,
+      "kills": 0,
+      "deaths": 6,
+      "assists": 0,
+      "teamTotalKills": 12,
+      "totalDamageDealt": 5000,
+      "teamTotalDamageDealt": 40000,
+      "totalDamageTaken": 1000,
+      "teamTotalDamageTaken": 40000,
+      "goldEarned": 1000,
+      "teamTotalGoldEarned": 40000
+    },
+    {
+      "matchId": "missing-004",
+      "win": true,
+      "kills": 3,
+      "deaths": 0,
+      "assists": 5,
+      "teamTotalKills": 11,
+      "totalDamageDealt": 9000,
+      "teamTotalDamageDealt": 45000,
+      "totalDamageTaken": 3000,
+      "teamTotalDamageTaken": 45000,
+      "goldEarned": 3000,
+      "teamTotalGoldEarned": 45000
+    }
+  ]
+}

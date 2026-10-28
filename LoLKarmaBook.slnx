@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LoLKarmaBook.Cli/LoLKarmaBook.Cli.csproj" />
+    <Project Path="src/LoLKarmaBook.Core/LoLKarmaBook.Core.csproj" />
+    <Project Path="src/LoLKarmaBook.Client/LoLKarmaBook.Client.csproj" />
+    <Project Path="src/LoLKarmaBook.Desktop/LoLKarmaBook.Desktop.csproj" />
+    <Project Path="src/LoLKarmaBook.Hexdata/LoLKarmaBook.Hexdata.csproj" />
+    <Project Path="src/LoLKarmaBook.Riot/LoLKarmaBook.Riot.csproj" />
+    <Project Path="src/LoLKarmaBook.Scoring/LoLKarmaBook.Scoring.csproj" />
+    <Project Path="src/LoLKarmaBook.Storage/LoLKarmaBook.Storage.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LoLKarmaBook.Core.Tests/LoLKarmaBook.Core.Tests.csproj" />
+    <Project Path="tests/LoLKarmaBook.Client.Tests/LoLKarmaBook.Client.Tests.csproj" />
+    <Project Path="tests/LoLKarmaBook.Desktop.Logic.Tests/LoLKarmaBook.Desktop.Logic.Tests.csproj" />
+    <Project Path="tests/LoLKarmaBook.Integration.Tests/LoLKarmaBook.Integration.Tests.csproj" />
+    <Project Path="tests/LoLKarmaBook.Paths.Tests/LoLKarmaBook.Paths.Tests.csproj" />
+    <Project Path="tests/LoLKarmaBook.Riot.Tests/LoLKarmaBook.Riot.Tests.csproj" />
+    <Project Path="tests/LoLKarmaBook.Scoring.Tests/LoLKarmaBook.Scoring.Tests.csproj" />
+  </Folder>
+</Solution>

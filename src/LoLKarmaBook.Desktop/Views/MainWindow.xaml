@@ -1,0 +1,251 @@
+<Window x:Class="LoLKarmaBook.Desktop.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:LoLKarmaBook.Desktop.Views"
+        xmlns:vm="clr-namespace:LoLKarmaBook.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Title="LoLKarmaBook"
+        Icon="pack://application:,,,/Assets/app-icon.ico"
+        Width="1280" Height="840"
+        MinWidth="980" MinHeight="660"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Brush.Background}"
+        FontFamily="{StaticResource Font.Ui}"
+        FontSize="{StaticResource Size.Body}"
+        Foreground="{StaticResource Brush.Text}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display">
+
+  <Window.InputBindings>
+    <KeyBinding Modifiers="Control" Key="D1" Command="{Binding SelectTabCommand}" CommandParameter="current" />
+    <KeyBinding Modifiers="Control" Key="D2" Command="{Binding SelectTabCommand}" CommandParameter="records" />
+    <KeyBinding Modifiers="Control" Key="D3" Command="{Binding SelectTabCommand}" CommandParameter="performance" />
+    <KeyBinding Modifiers="Control" Key="D4" Command="{Binding SelectTabCommand}" CommandParameter="settings" />
+    <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+  </Window.InputBindings>
+
+  <Window.Resources>
+    <!-- 左栏导航按钮：图标 + 文字 -->
+    <Style x:Key="NavItem" TargetType="RadioButton" BasedOn="{StaticResource Nav.Toggle}">
+      <Setter Property="AutomationProperties.Name" Value="{Binding Tag, RelativeSource={RelativeSource Self}}" />
+      <Setter Property="GroupName" Value="MainNav" />
+    </Style>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- ===================== 顶部栏 ===================== -->
+    <Border Grid.Row="0" Background="{StaticResource Brush.Surface}"
+            BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1"
+            Padding="20,12">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+          <Image Source="/Assets/app-icon.png" Width="36" Height="36" RenderOptions.BitmapScalingMode="HighQuality"
+                 AutomationProperties.Name="LoLKarmaBook 图标" />
+
+          <TextBlock Text="LoLKarmaBook" Margin="12,0,0,0" VerticalAlignment="Center"
+                     FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Text}" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <ComboBox x:Name="ProfileSelector"
+                    ItemsSource="{Binding Profiles}"
+                    DisplayMemberPath="Title"
+                    SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                    IsEnabled="{Binding CanChangeProfile}"
+                    MinWidth="170"
+                    AutomationProperties.Name="选择笔记空间"
+                    AutomationProperties.HelpText="不同空间使用独立数据库；演示空间与默认空间完全隔离。"
+                    ToolTip="每个空间一个独立 SQLite 数据库。切换前会先关闭当前数据库。">
+            <ComboBox.ItemContainerStyle>
+              <Style TargetType="ComboBoxItem">
+                <Setter Property="ToolTip" Value="{Binding Description}" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsDemo}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </ComboBox.ItemContainerStyle>
+          </ComboBox>
+
+          <Button Style="{StaticResource Button.Secondary}" Margin="10,0,0,0"
+                  Command="{Binding RefreshCommand}"
+                  ToolTip="重新读取当前页面（F5）。不会发起任何网络请求。"
+                  AutomationProperties.Name="刷新当前页面">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource Icon.Refresh}" Style="{StaticResource Icon16}" Stroke="{StaticResource Brush.Accent}" />
+              <TextBlock Text="刷新" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text}" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ===================== 主体 ===================== -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <!-- 侧边导航 -->
+      <Border Grid.Column="0" Width="208" Background="{StaticResource Brush.Surface}"
+              BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,0" Padding="6,12">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <StackPanel Grid.Row="0">
+            <RadioButton Style="{StaticResource NavItem}" Tag="当前对局"
+                         IsChecked="{Binding IsCurrentTab, Mode=OneWay}"
+                         Command="{Binding SelectTabCommand}" CommandParameter="current"
+                         AutomationProperties.HelpText="实时对局、当前账号、名单、既往记录与五类标记（Ctrl+1）">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource Icon.Shield}" Style="{StaticResource Icon16}" Stroke="{StaticResource Brush.Accent}" />
+                <TextBlock Text="当前对局" Margin="10,0,0,0" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton Style="{StaticResource NavItem}" Tag="我的记录"
+                         IsChecked="{Binding IsRecordsTab, Mode=OneWay}"
+                         Command="{Binding SelectTabCommand}" CommandParameter="records"
+                         AutomationProperties.HelpText="列出、筛选、编辑、归档、撤回和删除本空间记录（Ctrl+2）">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource Icon.List}" Style="{StaticResource Icon16}" Stroke="{StaticResource Brush.Accent}" />
+                <TextBlock Text="我的记录" Margin="10,0,0,0" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton Style="{StaticResource NavItem}" Tag="Hexdata 海斗分"
+                         IsChecked="{Binding IsPerformanceTab, Mode=OneWay}"
+                         Command="{Binding SelectTabCommand}" CommandParameter="performance"
+                         AutomationProperties.HelpText="Hexdata 海斗分、查询记录与对局表现（Ctrl+3）">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource Icon.Chart}" Style="{StaticResource Icon16}" Stroke="{StaticResource Brush.Accent}" />
+                <TextBlock Text="Hexdata 海斗分" Margin="10,0,0,0" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton Style="{StaticResource NavItem}" Tag="设置 / 关于"
+                         IsChecked="{Binding IsSettingsTab, Mode=OneWay}"
+                         Command="{Binding SelectTabCommand}" CommandParameter="settings"
+                         AutomationProperties.HelpText="数据位置、快照恢复与偏好设置（Ctrl+4）">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource Icon.Settings}" Style="{StaticResource Icon16}" Stroke="{StaticResource Brush.Accent}" />
+                <TextBlock Text="设置 / 关于" Margin="10,0,0,0" />
+              </StackPanel>
+            </RadioButton>
+
+            <Border Style="{StaticResource Divider}" Margin="12,10" />
+          </StackPanel>
+
+          <StackPanel Grid.Row="2" Margin="12,0,8,0">
+            <TextBlock Text="{Binding CurrentProfileTitle}" Style="{StaticResource Text.Body}"
+                       FontWeight="SemiBold" TextWrapping="Wrap" />
+            <Border Style="{StaticResource CardInset}" Margin="0,10,0,0" Padding="10"
+                    Visibility="{Binding IsDemoProfile, Converter={StaticResource BoolToVis}}">
+              <TextBlock Text="模拟演示空间：虚构数据。"
+                         Style="{StaticResource Text.Muted}" />
+            </Border>
+
+            <Border Style="{StaticResource CardInset}" Margin="0,10,0,0" Padding="10"
+                    Visibility="{Binding HasProfileSwitchError, Converter={StaticResource BoolToVis}}"
+                    Background="{StaticResource Brush.DangerSoft}" BorderBrush="{StaticResource Brush.Danger}">
+              <TextBlock Text="{Binding ProfileSwitchError}" Style="{StaticResource Text.Muted}"
+                         Foreground="{StaticResource Brush.Danger}" />
+            </Border>
+
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- 页面宿主 -->
+      <Grid Grid.Column="1">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 状态条 -->
+        <Border Grid.Row="0" x:Name="StatusStrip" Margin="20,12,20,0" Padding="12,4"
+                CornerRadius="8" BorderThickness="1"
+                BorderBrush="{Binding Status.Severity, Converter={StaticResource SeverityBrush}}"
+                Background="{StaticResource Brush.Surface}"
+                Visibility="{Binding Status.HasMessage, Converter={StaticResource BoolToVis}}"
+                AutomationProperties.LiveSetting="Polite">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Path Grid.Column="0" Style="{StaticResource Icon16}"
+                  Data="{StaticResource Icon.Info}"
+                  Stroke="{Binding Status.Severity, Converter={StaticResource SeverityBrush}}"
+                  Margin="0,0,10,0" />
+            <TextBlock Grid.Column="1" Text="{Binding Status.Message}" Style="{StaticResource Text.Body}"
+                       Foreground="{Binding Status.Severity, Converter={StaticResource SeverityBrush}}"
+                       VerticalAlignment="Center" AutomationProperties.Name="状态消息" />
+            <Button Grid.Column="2" Style="{StaticResource Button.Quiet}" Command="{Binding DismissStatusCommand}"
+                    AutomationProperties.Name="关闭状态消息" Padding="6,2" MinHeight="28" Margin="8,0,0,0">
+              <Path Data="{StaticResource Icon.Close}" Style="{StaticResource Icon16}"
+                    Stroke="{StaticResource Brush.TextMuted}" Width="12" Height="12" />
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- 页面 -->
+        <Grid Grid.Row="1" Margin="20,12,20,16">
+          <views:CurrentMatchPage DataContext="{Binding Current}"
+                                  Visibility="{Binding DataContext.IsCurrentTab, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+          <views:RecordsPage DataContext="{Binding Records}"
+                             Visibility="{Binding DataContext.IsRecordsTab, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+          <views:PerformancePage DataContext="{Binding Performance}"
+                                 Visibility="{Binding DataContext.IsPerformanceTab, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+          <views:SettingsPage DataContext="{Binding Settings}"
+                              Visibility="{Binding DataContext.IsSettingsTab, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+
+          <!-- 忙碌遮罩 -->
+          <Border Background="{StaticResource Brush.Overlay}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"
+                  CornerRadius="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock Text="{Binding BusyText}" Style="{StaticResource Text.Heading}" HorizontalAlignment="Center" />
+              <ProgressBar IsIndeterminate="True" Width="220" Height="4" Margin="0,12,0,0"
+                           Foreground="{StaticResource Brush.Accent}" Background="{StaticResource Brush.Border}" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Grid>
+    </Grid>
+
+    <!-- ===================== 底部栏 ===================== -->
+    <Border Grid.Row="2" Background="{StaticResource Brush.Surface}"
+            BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0"
+            Padding="20,7">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Style="{StaticResource Text.Muted}" FontSize="11.5"
+                   Text="{Binding AppVersion, StringFormat=LoLKarmaBook {0}}" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

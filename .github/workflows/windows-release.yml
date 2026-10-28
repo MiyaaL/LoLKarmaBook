@@ -1,0 +1,126 @@
+name: Windows release package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Verify release version
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content src/LoLKarmaBook.Desktop/LoLKarmaBook.Desktop.csproj -Raw
+          $version = $project.Project.PropertyGroup.Version | Where-Object { $_ }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") {
+            throw 'The release tag must match the desktop project version.'
+          }
+      - name: Build and run regression suites
+        shell: pwsh
+        run: ./scripts/verify.ps1
+      - name: Install official Inno Setup compiler
+        shell: pwsh
+        run: |
+          $setup = Join-Path $env:RUNNER_TEMP 'innosetup-7.1.0-x64.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_0/innosetup-7.1.0-x64.exe' -OutFile $setup
+          $signature = Get-AuthenticodeSignature -LiteralPath $setup
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Pyrsys B\.V\.') {
+            throw "Unexpected Inno Setup signature: $($signature.Status)"
+          }
+          $compilerRoot = Join-Path $env:RUNNER_TEMP 'inno-setup'
+          $install = Start-Process -FilePath $setup -ArgumentList @('/PORTABLE=1', '/CURRENTUSER', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=$compilerRoot", '/NOICONS') -WindowStyle Hidden -PassThru -Wait
+          if ($install.ExitCode -ne 0) { throw "Inno Setup install failed: $($install.ExitCode)" }
+          "ISCC_PATH=$compilerRoot\ISCC.exe" >> $env:GITHUB_ENV
+      - name: Build self-contained installer
+        shell: pwsh
+        run: ./scripts/installer-windows.ps1 -IsccPath $env:ISCC_PATH
+      - name: Verify isolated installation, launch, and uninstall
+        shell: pwsh
+        run: |
+          $setup = @(Get-ChildItem -LiteralPath artifacts -Filter '*-setup.exe')
+          if ($setup.Count -ne 1) { throw 'Expected exactly one installer.' }
+          $installRoot = Join-Path $env:RUNNER_TEMP 'LoLKarmaBook-release-smoke'
+          $installLog = Join-Path $env:RUNNER_TEMP 'LoLKarmaBook-install.log'
+          $install = Start-Process -FilePath $setup[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/NOICONS', "/DIR=$installRoot", "/LOG=$installLog") -WindowStyle Hidden -PassThru -Wait
+          if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
+          ./scripts/windows-smoke.ps1 -Executable (Join-Path $installRoot 'LoLKarmaBook.exe')
+          $dataRoot = Join-Path $installRoot 'userdata'
+          New-Item -ItemType Directory -Path $dataRoot -Force | Out-Null
+          $sentinel = Join-Path $dataRoot 'uninstall-preservation-check.txt'
+          Set-Content -LiteralPath $sentinel -Value 'release smoke check'
+          $uninstall = Start-Process -FilePath (Join-Path $installRoot 'unins000.exe') -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') -WindowStyle Hidden -PassThru -Wait
+          if ($uninstall.ExitCode -ne 0 -or (Test-Path -LiteralPath (Join-Path $installRoot 'LoLKarmaBook.exe')) -or -not (Test-Path -LiteralPath $sentinel)) {
+            throw 'Uninstall or userdata preservation check failed.'
+          }
+          $expected = (Get-Content -LiteralPath ($setup[0].FullName + '.sha256')).Split(' ')[0]
+          if ((Get-FileHash -LiteralPath $setup[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -cne $expected) {
+            throw 'Installer SHA256 mismatch.'
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LoLKarmaBook-windows-x64
+          path: artifacts/*
+          if-no-files-found: error
+
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: windows-release-draft-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: LoLKarmaBook-windows-x64
+          path: artifacts
+      - name: Upload verified installer to a release draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_REF: ${{ github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ref = [Uri]::EscapeDataString($env:SOURCE_REF)
+          $current = gh api "repos/$env:GH_REPO/commits/$ref" --jq '.sha'
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify the source ref.' }
+          if ($current -ne $env:SOURCE_SHA) { Write-Host 'A newer build supersedes this candidate.'; exit 0 }
+          $files = @(Get-ChildItem -LiteralPath artifacts -Force)
+          $setup = @($files | Where-Object { $_.Name -match '^LoLKarmaBook-(\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?)-windows-x64-setup\.exe$' })
+          if ($files.Count -ne 2 -or $setup.Count -ne 1) { throw 'Expected one EXE and its checksum.' }
+          $name = $setup[0].Name
+          $version = [regex]::Match($name, '^LoLKarmaBook-(.+)-windows-x64-setup\.exe$').Groups[1].Value
+          $checksumPath = $setup[0].FullName + '.sha256'
+          $checksum = [IO.File]::ReadAllText($checksumPath).Trim() -split '\s+'
+          $actual = (Get-FileHash -LiteralPath $setup[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($checksum.Count -ne 2 -or $checksum[0] -cne $actual -or $checksum[1] -cne $name) { throw 'Installer checksum mismatch.' }
+          $tag = 'v' + $version
+          $releases = gh api "repos/$env:GH_REPO/releases" --paginate --slurp | ConvertFrom-Json | ForEach-Object { $_ }
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect existing releases.' }
+          $existing = @($releases | Where-Object { $_.tag_name -eq $tag })
+          if ($existing.Count -gt 1) { throw 'Ambiguous release tag.' }
+          if ($existing.Count -eq 1) {
+            if (-not $existing[0].draft) { throw 'Published releases are never overwritten.' }
+            gh release edit $tag --target $env:SOURCE_SHA
+            if ($LASTEXITCODE -ne 0) { throw 'Draft source update failed.' }
+            gh release upload $tag $setup[0].FullName $checksumPath --clobber
+          } else {
+            $releaseArgs = @('release', 'create', $tag, $setup[0].FullName, $checksumPath, '--target', $env:SOURCE_SHA, '--title', "LoLKarmaBook $tag", '--notes', "Validated Windows candidate for commit $env:SOURCE_SHA.", '--draft')
+            if ($version.Contains('-')) { $releaseArgs += '--prerelease' }
+            gh @releaseArgs
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Draft asset upload failed.' }

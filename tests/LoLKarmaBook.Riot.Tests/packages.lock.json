@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "lolkarmabook.riot": {
+        "type": "Project",
+        "dependencies": {
+          "LoLKarmaBook.Scoring": "[1.0.0, )"
+        }
+      },
+      "lolkarmabook.scoring": {
+        "type": "Project"
+      }
+    }
+  }
+}

@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 1,
+  "source": "user-owned-completed-matches",
+  "matches": [
+    {
+      "matchId": "demo-performance-001",
+      "win": true,
+      "kills": 5,
+      "deaths": 1,
+      "assists": 8,
+      "teamTotalKills": 25,
+      "totalDamageDealt": 18000,
+      "teamTotalDamageDealt": 63000,
+      "totalDamageTaken": 9000,
+      "teamTotalDamageTaken": 47000,
+      "goldEarned": 9000,
+      "teamTotalGoldEarned": 51000
+    },
+    {
+      "matchId": "demo-performance-002",
+      "win": true,
+      "kills": 8,
+      "deaths": 3,
+      "assists": 13,
+      "teamTotalKills": 34,
+      "totalDamageDealt": 19700,
+      "teamTotalDamageDealt": 65700,
+      "totalDamageTaken": 10300,
+      "teamTotalDamageTaken": 49800,
+      "goldEarned": 9700,
+      "teamTotalGoldEarned": 52900
+    },
+    {
+      "matchId": "demo-performance-003",
+      "win": false,
+      "kills": 11,
+      "deaths": 5,
+      "assists": 18,
+      "teamTotalKills": 43,
+      "totalDamageDealt": 21400,
+      "teamTotalDamageDealt": 68400,
+      "totalDamageTaken": 11600,
+      "teamTotalDamageTaken": 52600,
+      "goldEarned": 10400,
+      "teamTotalGoldEarned": 54800
+    },
+    {
+      "matchId": "demo-performance-004",
+      "win": true,
+      "kills": 6,
+      "deaths": 1,
+      "assists": 11,
+      "teamTotalKills": 32,
+      "totalDamageDealt": 23100,
+      "teamTotalDamageDealt": 71100,
+      "totalDamageTaken": 12900,
+      "teamTotalDamageTaken": 55400,
+      "goldEarned": 11100,
+      "teamTotalGoldEarned": 53100
+    },
+    {
+      "matchId": "demo-performance-005",
+      "win": true,
+      "kills": 9,
+      "deaths": 3,
+      "assists": 16,
+      "teamTotalKills": 37,
+      "totalDamageDealt": 24800,
+      "teamTotalDamageDealt": 73800,
+      "totalDamageTaken": 14200,
+      "teamTotalDamageTaken": 52200,
+      "goldEarned": 11800,
+      "teamTotalGoldEarned": 55000
+    },
+    {
+      "matchId": "demo-performance-006",
+      "win": false,
+      "kills": 12,
+      "deaths": 5,
+      "assists": 9,
+      "teamTotalKills": 34,
+      "totalDamageDealt": 26500,
+      "teamTotalDamageDealt": 71500,
+      "totalDamageTaken": 15500,
+      "teamTotalDamageTaken": 55000,
+      "goldEarned": 12500,
+      "teamTotalGoldEarned": 56900
+    },
+    {
+      "matchId": "demo-performance-007",
+      "win": true,
+      "kills": 7,
+      "deaths": 1,
+      "assists": 14,
+      "teamTotalKills": 35,
+      "totalDamageDealt": 28200,
+      "teamTotalDamageDealt": 74200,
+      "totalDamageTaken": 16800,
+      "teamTotalDamageTaken": 57800,
+      "goldEarned": 13200,
+      "teamTotalGoldEarned": 55200
+    },
+    {
+      "matchId": "demo-performance-008",
+      "win": true,
+      "kills": 10,
+      "deaths": 3,
+      "assists": 19,
+      "teamTotalKills": 44,
+      "totalDamageDealt": 29900,
+      "teamTotalDamageDealt": 76900,
+      "totalDamageTaken": 18100,
+      "teamTotalDamageTaken": 60600,
+      "goldEarned": 13900,
+      "teamTotalGoldEarned": 57100
+    },
+    {
+      "matchId": "demo-performance-009",
+      "win": false,
+      "kills": 5,
+      "deaths": 5,
+      "assists": 12,
+      "teamTotalKills": 29,
+      "totalDamageDealt": 19600,
+      "teamTotalDamageDealt": 67600,
+      "totalDamageTaken": 9400,
+      "teamTotalDamageTaken": 47400,
+      "goldEarned": 14600,
+      "teamTotalGoldEarned": 59000
+    },
+    {
+      "matchId": "demo-performance-010",
+      "win": true,
+      "kills": 8,
+      "deaths": 1,
+      "assists": 17,
+      "teamTotalKills": 38,
+      "totalDamageDealt": 21300,
+      "teamTotalDamageDealt": 70300,
+      "totalDamageTaken": 10700,
+      "teamTotalDamageTaken": 50200,
+      "goldEarned": 9300,
+      "teamTotalGoldEarned": 51300
+    },
+    {
+      "matchId": "demo-performance-011",
+      "win": true,
+      "kills": 11,
+      "deaths": 3,
+      "assists": 10,
+      "teamTotalKills": 35,
+      "totalDamageDealt": 23000,
+      "teamTotalDamageDealt": 68000,
+      "totalDamageTaken": 12000,
+      "teamTotalDamageTaken": 53000,
+      "goldEarned": 10000,
+      "teamTotalGoldEarned": 53200
+    },
+    {
+      "matchId": "demo-performance-012",
+      "win": false,
+      "kills": 6,
+      "deaths": 5,
+      "assists": 15,
+      "teamTotalKills": 36,
+      "totalDamageDealt": 24700,
+      "teamTotalDamageDealt": 70700,
+      "totalDamageTaken": 13300,
+      "teamTotalDamageTaken": 55800,
+      "goldEarned": 10700,
+      "teamTotalGoldEarned": 55100
+    }
+  ],
+  "roster": {
+    "ownerId": "synthetic:target",
+    "matches": [
+      {
+        "matchId": "demo-performance-001",
+        "timestamp": "2026-01-01T00:00:00+00:00",
+        "teammates": [
+          "synthetic:p00",
+          "synthetic:p01",
+          "synthetic:p02",
+          "synthetic:p03"
+        ],
+        "opponents": [
+          "synthetic:p04",
+          "synthetic:p05",
+          "synthetic:p06",
+          "synthetic:p07",
+          "synthetic:p08"
+        ]
+      },
+      {
+        "matchId": "demo-performance-002",
+        "timestamp": "2026-01-01T01:00:00+00:00",
+        "teammates": [
+          "synthetic:p03",
+          "synthetic:p04",
+          "synthetic:p05",
+          "synthetic:p06"
+        ],
+        "opponents": [
+          "synthetic:p07",
+          "synthetic:p08",
+          "synthetic:p09",
+          "synthetic:p10",
+          "synthetic:p11"
+        ]
+      },
+      {
+        "matchId": "demo-performance-003",
+        "timestamp": "2026-01-01T02:00:00+00:00",
+        "teammates": [
+          "synthetic:p06",
+          "synthetic:p07",
+          "synthetic:p08",
+          "synthetic:p09"
+        ],
+        "opponents": [
+          "synthetic:p10",
+          "synthetic:p11",
+          "synthetic:p12",
+          "synthetic:p13",
+          "synthetic:p14"
+        ]
+      },
+      {
+        "matchId": "demo-performance-004",
+        "timestamp": "2026-01-01T03:00:00+00:00",
+        "teammates": [
+          "synthetic:p09",
+          "synthetic:p10",
+          "synthetic:p11",
+          "synthetic:p12"
+        ],
+        "opponents": [
+          "synthetic:p13",
+          "synthetic:p14",
+          "synthetic:p15",
+          "synthetic:p16",
+          "synthetic:p17"
+        ]
+      },
+      {
+        "matchId": "demo-performance-005",
+        "timestamp": "2026-01-01T04:00:00+00:00",
+        "teammates": [
+          "synthetic:p12",
+          "synthetic:p13",
+          "synthetic:p14",
+          "synthetic:p15"
+        ],
+        "opponents": [
+          "synthetic:p16",
+          "synthetic:p17",
+          "synthetic:p00",
+          "synthetic:p01",
+          "synthetic:p02"
+        ]
+      },
+      {
+        "matchId": "demo-performance-006",
+        "timestamp": "2026-01-01T05:00:00+00:00",
+        "teammates": [
+          "synthetic:p15",
+          "synthetic:p16",
+          "synthetic:p17",
+          "synthetic:p00"
+        ],
+        "opponents": [
+          "synthetic:p01",
+          "synthetic:p02",
+          "synthetic:p03",
+          "synthetic:p04",
+          "synthetic:p05"
+        ]
+      },
+      {
+        "matchId": "demo-performance-007",
+        "timestamp": "2026-01-01T06:00:00+00:00",
+        "teammates": [
+          "synthetic:p00",
+          "synthetic:p01",
+          "synthetic:p02",
+          "synthetic:p03"
+        ],
+        "opponents": [
+          "synthetic:p04",
+          "synthetic:p05",
+          "synthetic:p06",
+          "synthetic:p07",
+          "synthetic:p08"
+        ]
+      },
+      {
+        "matchId": "demo-performance-008",
+        "timestamp": "2026-01-01T07:00:00+00:00",
+        "teammates": [
+          "synthetic:p03",
+          "synthetic:p04",
+          "synthetic:p05",
+          "synthetic:p06"
+        ],
+        "opponents": [
+          "synthetic:p07",
+          "synthetic:p08",
+          "synthetic:p09",
+          "synthetic:p10",
+          "synthetic:p11"
+        ]
+      },
+      {
+        "matchId": "demo-performance-009",
+        "timestamp": "2026-01-01T08:00:00+00:00",
+        "teammates": [
+          "synthetic:p06",
+          "synthetic:p07",
+          "synthetic:p08",
+          "synthetic:p09"
+        ],
+        "opponents": [
+          "synthetic:p10",
+          "synthetic:p11",
+          "synthetic:p12",
+          "synthetic:p13",
+          "synthetic:p14"
+        ]
+      },
+      {
+        "matchId": "demo-performance-010",
+        "timestamp": "2026-01-01T09:00:00+00:00",
+        "teammates": [
+          "synthetic:p09",
+          "synthetic:p10",
+          "synthetic:p11",
+          "synthetic:p12"
+        ],
+        "opponents": [
+          "synthetic:p13",
+          "synthetic:p14",
+          "synthetic:p15",
+          "synthetic:p16",
+          "synthetic:p17"
+        ]
+      },
+      {
+        "matchId": "demo-performance-011",
+        "timestamp": "2026-01-01T10:00:00+00:00",
+        "teammates": [
+          "synthetic:p12",
+          "synthetic:p13",
+          "synthetic:p14",
+          "synthetic:p15"
+        ],
+        "opponents": [
+          "synthetic:p16",
+          "synthetic:p17",
+          "synthetic:p00",
+          "synthetic:p01",
+          "synthetic:p02"
+        ]
+      },
+      {
+        "matchId": "demo-performance-012",
+        "timestamp": "2026-01-01T11:00:00+00:00",
+        "teammates": [
+          "synthetic:p15",
+          "synthetic:p16",
+          "synthetic:p17",
+          "synthetic:p00"
+        ],
+        "opponents": [
+          "synthetic:p01",
+          "synthetic:p02",
+          "synthetic:p03",
+          "synthetic:p04",
+          "synthetic:p05"
+        ]
+      }
+    ]
+  },
+  "playerId": "synthetic:target"
+}

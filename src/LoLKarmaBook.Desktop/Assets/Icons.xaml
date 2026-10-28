@@ -1,0 +1,43 @@
+<!--
+  Inline vector icons (16x16 viewport, stroke via current brush).
+  No external image assets are shipped; these are original geometry.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- 挂机逃跑：时钟加离开箭头 -->
+  <Geometry x:Key="Icon.AfkLeave">M8,1.5 A6.5,6.5 0 1 0 8,14.5 A6.5,6.5 0 1 0 8,1.5 Z M8,4.6 V8.1 L10.4,9.6</Geometry>
+  <!-- 消极游戏：下滑折线 -->
+  <Geometry x:Key="Icon.PassivePlay">M1.8,5.2 L5.4,8.6 L8.1,6.4 L14.2,12.2 M14.2,12.2 V8.8 M14.2,12.2 H10.8</Geometry>
+  <!-- 言语挑衅：对话气泡 + 感叹 -->
+  <Geometry x:Key="Icon.VerbalAbuse">M1.6,3.2 H14.4 V11.2 H7.1 L3.4,14.2 V11.2 H1.6 Z M8,5.3 V8.3 M8,9.6 V9.9</Geometry>
+  <!-- 技术水平较低：短条状图 -->
+  <Geometry x:Key="Icon.LowSkill">M2.4,13.2 V9.4 M6,13.2 V6.2 M9.6,13.2 V7.8 M13.2,13.2 V4.6</Geometry>
+  <!-- 乱出装：背包/宝石 -->
+  <Geometry x:Key="Icon.OddBuild">M8,2 L14,5 V11 L8,14 L2,11 V5 Z M2,5 L8,8 L14,5 M8,8 V14</Geometry>
+
+  <!-- 通用动作图标 -->
+  <Geometry x:Key="Icon.View">M1.6,8 C3.6,4.2 12.4,4.2 14.4,8 C12.4,11.8 3.6,11.8 1.6,8 Z M8,5.9 A2.1,2.1 0 1 0 8,10.1 A2.1,2.1 0 1 0 8,5.9 Z</Geometry>
+  <Geometry x:Key="Icon.Edit">M10.4,2.2 L13.8,5.6 L5.4,14 H2 V10.6 Z M9,3.6 L12.4,7</Geometry>
+  <Geometry x:Key="Icon.Copy">M5.4,5.4 V2.2 H13.8 V10.6 H10.6 M2.2,5.4 H10.6 V13.8 H2.2 Z</Geometry>
+  <Geometry x:Key="Icon.Archive">M2,3 H14 V5.4 H2 Z M3.2,5.4 H12.8 V14 H3.2 Z M6.2,8.4 H9.8</Geometry>
+  <Geometry x:Key="Icon.Retract">M2.2,6.4 H9.6 V12.8 H2.2 Z M5.4,6.4 V3.8 H13.8 V10.2 H12.2 M3.6,3.4 L13,12.8</Geometry>
+  <Geometry x:Key="Icon.Delete">M2.4,4.2 H13.6 M6.4,4.2 V2.4 H9.6 V4.2 M3.8,4.2 L4.7,13.8 H11.3 L12.2,4.2 M6.6,6.8 V11.4 M9.4,6.8 V11.4</Geometry>
+  <Geometry x:Key="Icon.Save">M2.2,2.2 H11.4 L13.8,4.6 V13.8 H2.2 Z M4.8,2.2 H10.6 V6 H4.8 Z M4.8,9 H11.2 V13.8 H4.8 Z</Geometry>
+  <Geometry x:Key="Icon.Upload">M8,13.6 V3.2 M4.2,6.8 L8,3 L11.8,6.8 M2.2,11 V13.8 H13.8 V11</Geometry>
+  <Geometry x:Key="Icon.Refresh">M13.4,8 A5.4,5.4 0 1 1 11.8,4.2 M13.8,1.8 V5 H10.6</Geometry>
+  <Geometry x:Key="Icon.Shield">M8,1.8 L13.4,4 V8 C13.4,11.2 11,13.4 8,14.4 C5,13.4 2.6,11.2 2.6,8 V4 Z</Geometry>
+  <Geometry x:Key="Icon.Info">M8,1.6 A6.4,6.4 0 1 0 8,14.4 A6.4,6.4 0 1 0 8,1.6 Z M8,7.2 V11.4 M8,4.5 V4.9</Geometry>
+  <Geometry x:Key="Icon.Warning">M8,1.8 L14.6,13.6 H1.4 Z M8,5.8 V9.4 M8,11.1 V11.5</Geometry>
+  <Geometry x:Key="Icon.Folder">M1.8,3.4 H6.4 L8,5.2 H14.2 V13.2 H1.8 Z</Geometry>
+  <Geometry x:Key="Icon.Close">M3.2,3.2 L12.8,12.8 M12.8,3.2 L3.2,12.8</Geometry>
+  <Geometry x:Key="Icon.Pin">M6.2,2 H9.8 L10.6,6.4 L13.2,8 V9.2 H8.8 V14 L8,14.6 L7.2,14 V9.2 H2.8 V8 L5.4,6.4 Z</Geometry>
+  <Geometry x:Key="Icon.List">M2.2,3.4 H13.8 M2.2,8 H13.8 M2.2,12.6 H13.8</Geometry>
+  <Geometry x:Key="Icon.Bell">M8,1.8 A3.4,3.4 0 0 1 11.4,5.2 V8.6 L12.6,10.6 H3.4 L4.6,8.6 V5.2 A3.4,3.4 0 0 1 8,1.8 Z M6.4,12 A1.6,1.6 0 0 0 9.6,12</Geometry>
+  <Geometry x:Key="Icon.Chart">M2,13.4 H14 M3.6,11 V8 M6.8,11 V4.6 M10,11 V6.6 M13.2,11 V2.6</Geometry>
+  <Geometry x:Key="Icon.Flask">M6.2,1.8 V6 L2.4,12.6 A1,1 0 0 0 3.3,14.2 H12.7 A1,1 0 0 0 13.6,12.6 L9.8,6 V1.8 M5,1.8 H11 M4.4,9.4 H11.6</Geometry>
+  <Geometry x:Key="Icon.Settings">M8,5.6 A2.4,2.4 0 1 0 8,10.4 A2.4,2.4 0 1 0 8,5.6 Z M8,1.6 V3.3 M8,12.7 V14.4 M1.6,8 H3.3 M12.7,8 H14.4 M3.5,3.5 L4.7,4.7 M11.3,11.3 L12.5,12.5 M12.5,3.5 L11.3,4.7 M4.7,11.3 L3.5,12.5</Geometry>
+  <Geometry x:Key="Icon.Check">M3,8.4 L6.4,11.8 L13,4.4</Geometry>
+
+  <!-- 这些图标以 16x16 坐标绘制；使用时配合 Viewbox 缩放 -->
+</ResourceDictionary>
