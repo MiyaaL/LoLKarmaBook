@@ -199,7 +199,8 @@ public sealed class HexdataViewModel : ObservableObject
 
         OpenLoginPage();
         IsAwaitingBrowserLogin = true;
-        ShowStatus("已在浏览器窗口打开 Hexdata：完成登录后回来点「我已完成登录」。", "info");
+        ShowStatus("已打开 Hexdata 登录页：完成登录后回来点「我已完成登录」。"
+                   + "（浏览器已在运行时无法读取其登录状态，会改用独立窗口；登录一次后会记住。）", "info");
         await Task.CompletedTask;
     }
 

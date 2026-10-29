@@ -71,6 +71,10 @@ public sealed class HexdataBrowserLogin : IDisposable
     }
 
     private int _port;
+    private bool _ownsBrowser = true;
+
+    /// <summary>True when the opened window is the user's own browser, which must stay open.</summary>
+    public bool UsedUserProfile => !_ownsBrowser;
 
     private const int DebugPort = 9222;
 
@@ -92,16 +96,21 @@ public sealed class HexdataBrowserLogin : IDisposable
             throw new HexdataException("没有找到 Chrome 或 Edge，无法完成登录。", 0, "browser_missing");
         }
 
+        // The browser keeps the user signed in, but only an instance we start can expose
+        // DevTools. When Chrome/Edge is already running it would just hand the URL to
+        // that instance, so a dedicated profile is used instead.
+        bool useUserProfile = !AnyBrowserRunning();
         Directory.CreateDirectory(_profileDirectory);
         _browser = Process.Start(new ProcessStartInfo
         {
             FileName = executable,
             UseShellExecute = false,
             Arguments = "--remote-debugging-port=" + DebugPort
-                        + " --user-data-dir=\"" + _profileDirectory + "\""
+                        + (useUserProfile ? string.Empty : " --user-data-dir=\"" + _profileDirectory + "\"")
                         + " --no-first-run --no-default-browser-check"
                         + " --new-window \"" + LoginUrl + "\""
         }) ?? throw new HexdataException("无法启动浏览器。", 0, "browser_failed");
+        _ownsBrowser = !useUserProfile;
 
         _port = DebugPort;
         await WaitForPortAsync(_port, timeout, cancellationToken).ConfigureAwait(false);
@@ -161,7 +170,7 @@ public sealed class HexdataBrowserLogin : IDisposable
     {
         try
         {
-            if (_browser is { HasExited: false })
+            if (_ownsBrowser && _browser is { HasExited: false })
             {
                 _browser.Kill(entireProcessTree: true);
                 _browser.WaitForExit(5000);
@@ -177,6 +186,27 @@ public sealed class HexdataBrowserLogin : IDisposable
         }
     }
 
+    /// <summary>Any Chrome/Edge process means a fresh launch would not own the profile.</summary>
+    private static bool AnyBrowserRunning()
+    {
+        foreach (string name in new[] { "chrome", "msedge" })
+        {
+            try
+            {
+                Process[] processes = Process.GetProcessesByName(name);
+                if (processes.Length > 0)
+                {
+                    foreach (Process process in processes) process.Dispose();
+                    return true;
+                }
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+            }
+        }
+
+        return false;
+    }
     private static string? FindBrowser()
     {
         string[] roots =
