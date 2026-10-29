@@ -1,7 +1,8 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
@@ -109,6 +110,10 @@ public sealed class LcuClientService : ILcuClientService, ILcuTagSource
             IReadOnlyDictionary<int, string> championNames = await ReadChampionNamesAsync(cancellationToken).ConfigureAwait(false);
             MatchSession? session = LcuSnapshotParser.ParseSession(account, phase, flow, selection, _summoners,
                 localId, _providerId, _generation, ++_sequence, DateTimeOffset.UtcNow, championNames);
+            if (session is not null && phase == GamePhase.Finished)
+            {
+                session = await EnrichFinishedRosterAsync(session, account, championNames, cancellationToken).ConfigureAwait(false);
+            }
             return Snapshot(ClientConnectionStatus.Connected,
                 session is { Participants.Count: > 0 } ? "正在实时检测当前对局。" : "已检测到对局阶段，等待名单。",
                 account, session, phase, connection.ClientDirectory);
@@ -294,6 +299,182 @@ public sealed class LcuClientService : ILcuClientService, ILcuTagSource
         return _championNames;
     }
 
+    /// <summary>
+    /// The client hides some names while the match runs and only reveals them in the
+    /// match history afterwards, so a finished roster is completed from that record.
+    /// </summary>
+    private async Task<MatchSession> EnrichFinishedRosterAsync(MatchSession session, ClientAccount account,
+        IReadOnlyDictionary<int, string> championNames, CancellationToken cancellationToken)
+    {
+        if (!session.Participants.Any(participant => participant.Visibility != RosterVisibility.Visible
+                                                     || string.IsNullOrWhiteSpace(participant.CurrentDisplayId)))
+        {
+            return session;
+        }
+
+        long gameId = GameIdFrom(session.ExternalMatchId);
+        if (gameId <= 0)
+        {
+            return session;
+        }
+
+        JsonElement? detail;
+        try
+        {
+            detail = await GetJsonAsync("/lol-match-history/v1/games/" + gameId.ToString(CultureInfo.InvariantCulture),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException or JsonException or LcuAuthenticationException)
+        {
+            return session;
+        }
+
+        if (detail is not { ValueKind: JsonValueKind.Object })
+        {
+            return session;
+        }
+
+        List<HistoryRow> rows = ReadHistoryRows(detail.Value);
+        if (rows.Count == 0 || rows.Count != session.Participants.Count)
+        {
+            return session;
+        }
+
+        HistoryRow? selfRow = rows.FirstOrDefault(row =>
+            !PlayerIdentity.IsPlaceholderValue(account.Puuid) && row.Puuid == account.Puuid);
+        if (selfRow is null || selfRow.TeamId is not (100 or 200))
+        {
+            return session;
+        }
+
+        var bySide = rows
+            .GroupBy(row => row.TeamId == selfRow.TeamId ? ParticipantSide.Ally : ParticipantSide.Enemy)
+            .ToDictionary(group => group.Key, group => group.OrderBy(row => row.Index).ToList());
+        var used = new HashSet<int>();
+        var participants = new List<Participant>(session.Participants.Count);
+        foreach (Participant participant in session.Participants)
+        {
+            if (participant.Visibility == RosterVisibility.Visible
+                && !string.IsNullOrWhiteSpace(participant.CurrentDisplayId))
+            {
+                participants.Add(participant);
+                continue;
+            }
+
+            if (!bySide.TryGetValue(participant.Side, out List<HistoryRow>? candidates))
+            {
+                participants.Add(participant);
+                continue;
+            }
+
+            HistoryRow? row = candidates.FirstOrDefault(candidate => !used.Contains(candidate.Index));
+            if (row is null)
+            {
+                participants.Add(participant);
+                continue;
+            }
+
+            used.Add(row.Index);
+            participants.Add(BuildFromHistory(participant, row, championNames));
+        }
+
+        if (participants.SequenceEqual(session.Participants))
+        {
+            return session;
+        }
+
+        return new MatchSession(session.LocalSessionId, session.SourceKind, session.ProviderInstanceId,
+            session.Generation, session.Sequence, session.ObservedAt, session.Phase, session.QueueId, session.MapId,
+            session.ExternalMatchId, session.RosterComplete, participants);
+    }
+
+    private static Participant BuildFromHistory(Participant original, HistoryRow row,
+        IReadOnlyDictionary<int, string> championNames)
+    {
+        string? champion = original.Champion;
+        if (champion is null && row.ChampionId > 0)
+        {
+            champion = championNames.TryGetValue(row.ChampionId, out string? name)
+                ? name
+                : "#" + row.ChampionId.ToString(CultureInfo.InvariantCulture);
+        }
+
+        PlayerIdentity? identity = null;
+        if (!PlayerIdentity.IsPlaceholderValue(row.Puuid))
+        {
+            PlayerIdentity.TryCreate("riot", "lcu-puuid", "global", "puuid", row.Puuid, out identity, out _);
+        }
+
+        string key = "eog-" + ShortHash(identity?.Value ?? row.Name + "|" + row.Index.ToString(CultureInfo.InvariantCulture));
+        return identity is null
+            ? Participant.VisibleNameOnly(key, original.Side, row.Name, champion, original.IsSelf)
+            : Participant.Visible(key, original.Side, row.Name, identity, champion, original.IsSelf);
+    }
+
+    private static List<HistoryRow> ReadHistoryRows(JsonElement game)
+    {
+        JsonElement? identities = LcuSnapshotParser.Child(game, "participantIdentities");
+        JsonElement? participants = LcuSnapshotParser.Child(game, "participants");
+        if (identities is not { ValueKind: JsonValueKind.Array } identityRows
+            || participants is not { ValueKind: JsonValueKind.Array } participantRows)
+        {
+            return new List<HistoryRow>();
+        }
+
+        var players = new Dictionary<long, (string Puuid, string Name)>();
+        foreach (JsonElement identity in identityRows.EnumerateArray())
+        {
+            long id = LcuSnapshotParser.Number(identity, "participantId", -1);
+            JsonElement? player = LcuSnapshotParser.Child(identity, "player");
+            if (id < 0 || player is null)
+            {
+                continue;
+            }
+
+            string name = LcuSnapshotParser.Text(player, "gameName", "summonerName", "displayName");
+            string tag = LcuSnapshotParser.Text(player, "tagLine");
+            if (name.Length > 0 && tag.Length > 0 && !name.Contains('#'))
+            {
+                name += "#" + tag;
+            }
+
+            players[id] = (LcuSnapshotParser.Text(player, "puuid"), name);
+        }
+
+        var rows = new List<HistoryRow>(10);
+        foreach (JsonElement participant in participantRows.EnumerateArray())
+        {
+            long id = LcuSnapshotParser.Number(participant, "participantId", -1);
+            if (!players.TryGetValue(id, out (string Puuid, string Name) player) || player.Name.Length == 0)
+            {
+                continue;
+            }
+
+            rows.Add(new HistoryRow((int)id, LcuSnapshotParser.Number(participant, "teamId"),
+                (int)Math.Clamp(LcuSnapshotParser.Number(participant, "championId"), 0, int.MaxValue),
+                player.Puuid, player.Name));
+        }
+
+        return rows;
+    }
+
+    private static long GameIdFrom(string? externalMatchId)
+    {
+        if (string.IsNullOrWhiteSpace(externalMatchId))
+        {
+            return 0;
+        }
+
+        int cut = externalMatchId.LastIndexOf(':');
+        return cut > 0 && long.TryParse(externalMatchId[(cut + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out long gameId)
+            ? gameId
+            : 0;
+    }
+
+    private static string ShortHash(string value) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)))[..16].ToLowerInvariant();
+
+    private sealed record HistoryRow(int Index, long TeamId, int ChampionId, string Puuid, string Name);
     private void ResetConnection()
     {
         _http?.Dispose();

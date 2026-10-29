@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -91,7 +91,23 @@ var tests = new (string Name, Func<Task> Run)[]
         Require(scenario.Requests.Count(r => r.RequestUri!.AbsolutePath == "/lol-game-data/assets/v1/champion-summary.json") == 1,
             "the champion list was fetched more than once");
     }),
-    ("champion selection detects self by cell and never resolves anonymous identities", () =>
+    ("finished matches take hidden names from the match history", async () =>
+    {
+        var scenario = new Scenario
+        {
+            Phase = "EndOfGame",
+            Flow = """{"gameData":{"gameId":10001,"queue":{"id":420},"map":{"id":11},"teamOne":[{"puuid":"puuid-self","summonerId":1,"gameName":"Self"}],"teamTwo":[{"puuid":"puuid-peer","summonerId":2,"isObfuscated":true}]}}""",
+            MatchHistory = """{"participantIdentities":[{"participantId":1,"player":{"puuid":"puuid-self","gameName":"Self"}},{"participantId":2,"player":{"puuid":"puuid-peer","gameName":"Peer","tagLine":"EUW"}}],"participants":[{"participantId":1,"teamId":100,"championId":1},{"participantId":2,"teamId":200,"championId":2}]}"""
+        };
+        using var service = scenario.Service();
+        ClientSnapshot snapshot = await service.PollAsync();
+        Participant enemy = snapshot.Session!.Participants.Single(p => p.Side == ParticipantSide.Enemy);
+        Require(enemy.Visibility == RosterVisibility.Visible, "hidden name was not completed");
+        Require(enemy.CurrentDisplayId == "Peer#EUW", "history name was not applied: " + enemy.CurrentDisplayId);
+        Require(enemy.IdentityStrength == IdentityStrength.VerifiedStable, "history identity was not applied");
+        Require(scenario.Requests.Any(r => r.RequestUri!.AbsolutePath == "/lol-match-history/v1/games/10001"),
+            "match history was not requested");
+    }),    ("champion selection detects self by cell and never resolves anonymous identities", () =>
     {
         var account = LcuSnapshotParser.ParseAccount(Json(AccountJson), "EUW1");
         JsonElement selection = Json(SelectionJson);
@@ -283,6 +299,7 @@ sealed class Scenario
     public string Phase { get; set; } = "InProgress";
     public string Flow { get; set; } = """{"gameData":{"gameId":10001,"teamOne":[{"puuid":"puuid-self","summonerId":1,"gameName":"Self"}],"teamTwo":[{"puuid":"puuid-peer","summonerId":2,"gameName":"Peer"}]}}""";
     public string Selection { get; set; } = "{}";
+    public string? MatchHistory { get; set; }
     public string? Champions { get; set; }
     public List<HttpRequestMessage> Requests { get; } = new();
     public LcuClientService Service() => new(Discovery, () => new FakeHandler(this));
@@ -300,6 +317,7 @@ sealed class Scenario
             "/lol-gameflow/v1/gameflow-phase" => JsonSerializer.Serialize(Phase),
             "/lol-gameflow/v1/session" => Flow,
             "/lol-champ-select/v1/session" => Selection,
+            "/lol-match-history/v1/games/10001" => MatchHistory,
             "/lol-game-data/assets/v1/champion-summary.json" => Champions,
             _ => null
         };
