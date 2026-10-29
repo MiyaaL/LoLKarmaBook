@@ -21,6 +21,9 @@ public sealed class EndOfGameViewModel : ObservableObject
     private readonly string _profileId;
     private EndOfGamePlayerViewModel? _selectedPlayer;
     private CategoryChoiceViewModel? _selectedCategory;
+    private readonly ObservableCollection<TagSuggestionViewModel> _tagSuggestions = new();
+    private readonly ObservableCollection<TagChipViewModel> _tags = new();
+    private string _tagQuery = string.Empty;
     private string _body = string.Empty;
     private string _message = string.Empty;
     private string _messageSeverity = "info";
@@ -43,6 +46,8 @@ public sealed class EndOfGameViewModel : ObservableObject
 
         ToggleCategoryCommand = new RelayCommand<CategoryChoiceViewModel>(toggle);
         DismissCommand = new RelayCommand(_main.CloseEndOfGame);
+        AddTagCommand = new RelayCommand<TagSuggestionViewModel>(AddTag);
+        RemoveTagCommand = new RelayCommand<TagChipViewModel>(RemoveTag);
         SaveCommand = new AsyncRelayCommand(SaveAsync, () => CanSave, ex => _main.ShowError(ex, "保存赛后记录失败"));
         foreach (CategoryChoiceViewModel category in Categories)
             category.PropertyChanged += OnCategoryChanged;
@@ -54,6 +59,88 @@ public sealed class EndOfGameViewModel : ObservableObject
     public ObservableCollection<CategoryChoiceViewModel> Categories { get; }
 
     public ObservableCollection<EndOfGameReminderViewModel> Reminders { get; }
+
+    public ObservableCollection<TagChipViewModel> Tags => _tags;
+
+    public ObservableCollection<TagSuggestionViewModel> TagSuggestions => _tagSuggestions;
+
+    public bool HasTags => _tags.Count > 0;
+
+    public bool HasTagSuggestions => _tagSuggestions.Count > 0;
+
+    public RelayCommand<TagSuggestionViewModel> AddTagCommand { get; }
+
+    public RelayCommand<TagChipViewModel> RemoveTagCommand { get; }
+
+    /// <summary>Same official champion/item search as the main form; folk names included.</summary>
+    public string TagQuery
+    {
+        get => _tagQuery;
+        set
+        {
+            if (SetProperty(ref _tagQuery, value ?? string.Empty))
+            {
+                RefreshTagSuggestions();
+            }
+        }
+    }
+
+    private void RefreshTagSuggestions()
+    {
+        _tagSuggestions.Clear();
+        try
+        {
+            string query = _tagQuery.Trim();
+            if (query.Length > 0)
+            {
+                var selected = _tags.Select(chip => (chip.Tag.Kind, chip.Tag.RefId)).ToHashSet();
+                foreach (TagEntry entry in _main.Tags.Search(query, 12))
+                {
+                    if (!selected.Contains((entry.Kind, entry.Id)))
+                    {
+                        _tagSuggestions.Add(new TagSuggestionViewModel(entry));
+                    }
+
+                    if (_tagSuggestions.Count >= 8)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _main.Log.Warn("tags", "Tag suggestion failed", ex);
+        }
+
+        OnPropertyChanged(nameof(HasTagSuggestions));
+    }
+
+    private void AddTag(TagSuggestionViewModel? suggestion)
+    {
+        if (suggestion is null)
+        {
+            return;
+        }
+
+        TagEntry entry = suggestion.Entry;
+        if (_tags.Any(chip => chip.Tag.Kind == entry.Kind && chip.Tag.RefId == entry.Id))
+        {
+            return;
+        }
+
+        _tags.Add(new TagChipViewModel(new NoteTag(entry.Kind, entry.Id, entry.OfficialName), RemoveTag));
+        OnPropertyChanged(nameof(HasTags));
+        TagQuery = string.Empty;
+    }
+
+    private void RemoveTag(TagChipViewModel? chip)
+    {
+        if (chip is not null && _tags.Remove(chip))
+        {
+            OnPropertyChanged(nameof(HasTags));
+        }
+    }
 
     public bool HasReminders => Reminders.Count > 0;
 
@@ -177,12 +264,20 @@ public sealed class EndOfGameViewModel : ObservableObject
                     categories,
                     string.IsNullOrWhiteSpace(_body) ? null : _body,
                     _snapshot.Session.ObservedAt,
-                    _main.PersistedSettings.DefaultReminderDays));
+                    _main.PersistedSettings.DefaultReminderDays,
+                    _tags.Select(chip => chip.Tag).ToArray()));
 
             // Another participant may be marked from the same window.
             foreach (CategoryChoiceViewModel choice in Categories) choice.IsSelected = false;
             _body = string.Empty;
             OnPropertyChanged(nameof(Body));
+            if (_tags.Count > 0)
+            {
+                _tags.Clear();
+                OnPropertyChanged(nameof(HasTags));
+            }
+
+            TagQuery = string.Empty;
             SaveCommand.RaiseCanExecuteChanged();
             SetMessage($"已记录 {player.DisplayId}：{NotePresenter.CategoryList(saved.Categories.Select(c => c.Category))}。",
                 "success");

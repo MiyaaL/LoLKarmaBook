@@ -12,7 +12,7 @@
     <Product>LoLKarmaBook</Product>
     <AssemblyTitle>LoLKarmaBook</AssemblyTitle>
     <Description>LOL 客户端实时对局检测、玩家记录与对局表现分。</Description>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
   </PropertyGroup>
 

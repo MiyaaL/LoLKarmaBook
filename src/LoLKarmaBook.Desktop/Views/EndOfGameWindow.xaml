@@ -135,6 +135,40 @@
                    AutomationProperties.Name="本局备注（选填）"
                    Style="{StaticResource TextBox.Multiline}" />
 
+          <TextBlock Text="标签（英雄 / 装备，可模糊搜索）" Style="{StaticResource Text.Label}" Margin="0,10,0,4" />
+          <ItemsControl ItemsSource="{Binding Tags}" Margin="0,0,0,4">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:TagChipViewModel}">
+                <Button Style="{StaticResource Button.Row}" Content="{Binding DisplayName}"
+                        Command="{Binding RemoveCommand}" Margin="0,0,6,4"
+                        ToolTip="点击移除这个标签" AutomationProperties.Name="{Binding RemoveLabel}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBox Text="{Binding TagQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                   AutomationProperties.Name="搜索英雄或装备"
+                   ToolTip="输入官方名、民间叫法或拼音，例如「无尽」「狐狸」" />
+          <ItemsControl ItemsSource="{Binding TagSuggestions}" Margin="0,4,0,0"
+                        Visibility="{Binding HasTagSuggestions, Converter={StaticResource BoolToVis}}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:TagSuggestionViewModel}">
+                <Button Style="{StaticResource Button.Quiet}" HorizontalContentAlignment="Left"
+                        Command="{Binding DataContext.AddTagCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                        CommandParameter="{Binding}" Padding="8,4" Margin="0,0,0,2">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding KindBadge}" FontWeight="SemiBold" Margin="0,0,6,0" />
+                    <TextBlock Text="{Binding DisplayName}" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
           <TextBlock Text="{Binding Message}" Margin="0,8,0,0" TextWrapping="Wrap"
                      Foreground="{Binding MessageSeverity, Converter={StaticResource SeverityTextBrush}}"
                      Visibility="{Binding HasMessage, Converter={StaticResource BoolToVis}}" />
