@@ -55,8 +55,8 @@
       "lolkarmabook.client": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Core": "[1.0.0, )",
-          "LoLKarmaBook.Scoring": "[1.0.0, )"
+          "LoLKarmaBook.Core": "[1.0.3, )",
+          "LoLKarmaBook.Scoring": "[1.0.3, )"
         }
       },
       "lolkarmabook.core": {
@@ -68,13 +68,13 @@
       "lolkarmabook.hexdata": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Core": "[1.0.0, )"
+          "LoLKarmaBook.Core": "[1.0.3, )"
         }
       },
       "lolkarmabook.riot": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Scoring": "[1.0.0, )"
+          "LoLKarmaBook.Scoring": "[1.0.3, )"
         }
       },
       "lolkarmabook.scoring": {
@@ -83,9 +83,16 @@
       "lolkarmabook.storage": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Core": "[1.0.0, )",
+          "LoLKarmaBook.Core": "[1.0.3, )",
           "Microsoft.Data.Sqlite": "[10.0.14, )"
         }
+      }
+    },
+    "net10.0-windows7.0/win-x64": {
+      "SQLitePCLRaw.lib.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A=="
       }
     }
   }

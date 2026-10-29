@@ -100,8 +100,11 @@ public sealed class RecordRowViewModel : ObservableObject
 
     public bool IsActive { get; }
 
-    /// <summary>Active is the normal state, so the badge only appears for the others.</summary>
-    public bool ShowStatusBadge => !IsActive;
+    /// <summary>
+    /// Only states the user still has to act on are labelled: a retracted record is
+    /// simply a record whose reminder was withdrawn, so it needs no badge.
+    /// </summary>
+    public bool ShowStatusBadge => IsDraft || IsArchived;
 
     public bool IsDraft { get; }
 
