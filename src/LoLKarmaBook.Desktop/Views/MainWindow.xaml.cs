@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private readonly MainViewModel _main;
     private readonly DesktopSettings _settings;
     private EndOfGameWindow? _endOfGame;
+    private ReminderToastWindow? _reminderToast;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
     private bool _closing;
     private bool _exitRequested;
@@ -40,6 +41,7 @@ public partial class MainWindow : Window
         main.WorkspaceClosing += (_, _) => SavePlacement();
         main.ShutdownRequested += (_, _) => RequestExit();
         main.EndOfGameChanged += OnEndOfGameChanged;
+        main.RemindersDetected += ShowReminderToast;
         Closed += (_, _) => main.EndOfGameChanged -= OnEndOfGameChanged;
 
         // Host-provided dialogs. If a dialog cannot be shown, the corresponding
@@ -413,6 +415,20 @@ public partial class MainWindow : Window
     }
 
 
+    /// <summary>Bottom-right notice for players already in the notebook; one at a time.</summary>
+    private void ShowReminderToast(IReadOnlyList<string> names)
+    {
+        if (names.Count == 0) return;
+        _reminderToast?.Close();
+        var toast = new ReminderToastWindow(names);
+        _reminderToast = toast;
+        toast.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_reminderToast, toast)) _reminderToast = null;
+        };
+        toast.Show();
+        toast.StartCountdown();
+    }
     private void OpenFolder(string path)
     {
         if (!Directory.Exists(path))

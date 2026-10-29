@@ -104,8 +104,11 @@ public sealed partial class CurrentMatchViewModel
         await EvaluateRemindersAsync().ConfigureAwait(true);
         if (!IsCurrentLiveObservation(session, profileId)) return;
         if (first.Length > 0)
-            _main.Status.Warn("再次相遇：" + string.Join("、", first.Select(r => r.CurrentDisplayId ?? "已记录玩家"))
-                + "，存在本机历史记录。");
+        {
+            string[] names = first.Select(r => r.CurrentDisplayId ?? "已记录玩家").ToArray();
+            _main.Status.Warn("再次相遇：" + string.Join("、", names) + "，存在本机历史记录。");
+            _main.NotifyReminders(names);
+        }
         RaiseSessionProperties();
     }
 

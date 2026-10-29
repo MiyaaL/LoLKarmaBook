@@ -1,4 +1,4 @@
-﻿using LoLKarmaBook.Core;
+using LoLKarmaBook.Core;
 using LoLKarmaBook.Desktop.Infrastructure;
 using LoLKarmaBook.Desktop.Security;
 using LoLKarmaBook.Desktop.Services;
@@ -113,7 +113,25 @@ var tests = new (string Name, Func<Task> Run)[]
         await main.RefreshClientAsync();
         Require(!main.Status.HasMessage, "选人转入游戏获得matchId后重复通知。");
     })),
-    ("赛后窗口只为有历史本局弹出且记录保存到当前空间", () => WithLiveMain(async (main, client) =>
+    ("再次相遇会触发右下角提示且只触发一次", () => WithLiveMain(async (main, client) =>
+    {
+        ClientAccount account = Account("toast-owner", "提示测试");
+        client.Snapshot = Connected(account, null);
+        await main.RefreshClientAsync();
+        await main.Notebook.SaveNoteAsync(new SyntheticProvider().GetMatchA(), SyntheticScenario.MatchAXParticipantKey,
+            new NoteDraft("toast-history", [NoteCategory.VerbalAbuse]));
+        var announced = new List<IReadOnlyList<string>>();
+        main.RemindersDetected += names => announced.Add(names);
+        MatchSession session = LiveSession(new SyntheticProvider().GetMatchB(), "toast-reminder", 1);
+        client.Snapshot = Connected(account, session);
+        await main.RefreshClientAsync();
+        Require(announced.Count == 1, "首次再遇没有触发右下角提示。");
+        Require(announced[0].Count == 1 && !string.IsNullOrWhiteSpace(announced[0][0]),
+            "提示里的玩家名不正确。");
+        client.Snapshot = Connected(account, LiveSession(session, "toast-reminder", 2));
+        await main.RefreshClientAsync();
+        Require(announced.Count == 1, "重复轮询又弹了一次提示。");
+    })),    ("赛后窗口只为有历史本局弹出且记录保存到当前空间", () => WithLiveMain(async (main, client) =>
     {
         ClientAccount account = Account("eog-owner", "赛后测试");
         MatchSession template = new SyntheticProvider().GetMatchA();

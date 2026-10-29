@@ -1,0 +1,27 @@
+<Window x:Class="LoLKarmaBook.Desktop.Views.ReminderToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="再次相遇" Width="360" SizeToContent="Height"
+        WindowStyle="None" ResizeMode="NoResize"
+        ShowInTaskbar="False" ShowActivated="False" Topmost="True"
+        WindowStartupLocation="Manual"
+        Background="{StaticResource Brush.Surface}"
+        BorderBrush="{StaticResource Brush.Accent}" BorderThickness="1"
+        FontFamily="{StaticResource Font.Ui}"
+        FontSize="{StaticResource Size.Body}"
+        Foreground="{StaticResource Brush.Text}">
+  <StackPanel Margin="16,14">
+    <StackPanel Orientation="Horizontal">
+      <Image Source="/Assets/app-icon.ico" Width="20" Height="20" RenderOptions.BitmapScalingMode="HighQuality" />
+      <TextBlock Text="再次相遇" Style="{StaticResource Text.Heading}" Margin="8,0,0,0" VerticalAlignment="Center" />
+    </StackPanel>
+    <TextBlock x:Name="NamesText" Style="{StaticResource Text.Body}" Margin="0,8,0,0" TextWrapping="Wrap"
+               FontWeight="SemiBold" />
+    <TextBlock Text="本机有这些玩家的历史记录，详情见「当前对局」。" Style="{StaticResource Text.Muted}"
+               Margin="0,4,0,0" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+      <Button x:Name="DismissButton" Style="{StaticResource Button.Quiet}" Content="知道了"
+              Click="OnDismissClick" AutomationProperties.Name="关闭再次相遇提示" />
+    </StackPanel>
+  </StackPanel>
+</Window>

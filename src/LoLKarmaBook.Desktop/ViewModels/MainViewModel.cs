@@ -304,6 +304,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Raised when the window should close for a safe shutdown.</summary>
     public event EventHandler? ShutdownRequested;
 
+    /// <summary>
+    /// Raised once per newly met player who already has notes, so the shell can show
+    /// a bottom-right notice without the live poll touching windows itself.
+    /// </summary>
+    public event Action<IReadOnlyList<string>>? RemindersDetected;
+
+    internal void NotifyReminders(IReadOnlyList<string> names) => RemindersDetected?.Invoke(names);
+
     public void Start()
     {
         string? preferred = _preferences.LastProfileId;
