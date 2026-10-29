@@ -1,4 +1,4 @@
-using LoLKarmaBook.Core;
+﻿using LoLKarmaBook.Core;
 using LoLKarmaBook.Desktop.Infrastructure;
 using LoLKarmaBook.Desktop.Security;
 using LoLKarmaBook.Desktop.Services;
@@ -131,6 +131,25 @@ var tests = new (string Name, Func<Task> Run)[]
         client.Snapshot = Connected(account, LiveSession(session, "toast-reminder", 2));
         await main.RefreshClientAsync();
         Require(announced.Count == 1, "重复轮询又弹了一次提示。");
+    })),    ("结算后才显示的名字会补进赛后卡片", () => WithLiveMain(async (main, client) =>
+    {
+        ClientAccount account = Account("late-names", "延迟名称");
+        MatchSession template = new SyntheticProvider().GetMatchB();
+        Participant[] hidden = template.Participants
+            .Select((participant, index) => index == 0
+                ? Participant.Hidden("late-hidden", participant.Side, participant.IsSelf)
+                : participant)
+            .ToArray();
+        client.Snapshot = Connected(account, new MatchSession("late-match", SourceKind.Live, "late", 1, 1,
+            DateTimeOffset.UtcNow, GamePhase.Finished, template.QueueId, template.MapId, "lcu:test:late-match", true, hidden));
+        await main.RefreshClientAsync();
+        await Run(main.MarkLastMatchCommand);
+        int before = main.EndOfGame!.Players.Count;
+
+        client.Snapshot = Connected(account, LiveSession(template, "late-match", 2, phase: GamePhase.Finished));
+        await main.RefreshClientAsync();
+        Require(main.EndOfGame!.Players.Count == before + 1, "结算后的名单没有补进赛后卡片。");
+        Require(main.EndOfGame.Players.Any(p => !string.IsNullOrWhiteSpace(p.DisplayId)), "补进来的玩家没有名字。");
     })),    ("赛后窗口只为有历史本局弹出且记录保存到当前空间", () => WithLiveMain(async (main, client) =>
     {
         ClientAccount account = Account("eog-owner", "赛后测试");

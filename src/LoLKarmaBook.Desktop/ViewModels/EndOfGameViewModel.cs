@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using LoLKarmaBook.Core;
@@ -16,7 +16,7 @@ namespace LoLKarmaBook.Desktop.ViewModels;
 public sealed class EndOfGameViewModel : ObservableObject
 {
     private readonly MainViewModel _main;
-    private readonly MatchRosterSnapshot _snapshot;
+    private MatchRosterSnapshot _snapshot;
     private readonly NotebookService _notebook;
     private readonly string _profileId;
     private EndOfGamePlayerViewModel? _selectedPlayer;
@@ -153,6 +153,66 @@ public sealed class EndOfGameViewModel : ObservableObject
     public string PlayersHeading => HasPlayers
         ? "本局玩家（选择一位并勾选行为）"
         : "本局名单不可用，无法赛后标记：客户端已离开赛后阶段，或名单中的玩家没有稳定身份。";
+
+    /// <summary>
+    /// The client hides some names during the match and reveals them once it is over,
+    /// so an open card adopts the newest finished observation when it shows more.
+    /// </summary>
+    public bool RefreshRoster(MatchSession session)
+    {
+        bool sameMatch = _snapshot.IsSameMatch(session)
+            || string.Equals(_snapshot.LocalSessionId, session.LocalSessionId, StringComparison.Ordinal);
+        if (!sameMatch || !RosterChanged(_snapshot.Session, session))
+        {
+            return false;
+        }
+
+        string? selectedKey = _selectedPlayer?.Participant.ParticipantKey;
+        _snapshot = _snapshot.Refresh(session);
+        SelectedPlayer = null;
+        Players.Clear();
+        foreach (EndOfGamePlayerViewModel player in session.Participants
+                     .Select(participant => new EndOfGamePlayerViewModel(participant, session.LocalSessionId))
+                     .Where(player => player.CanReceiveNote))
+        {
+            Players.Add(player);
+        }
+
+        if (selectedKey is not null)
+        {
+            SelectedPlayer = Players.FirstOrDefault(player => player.Participant.ParticipantKey == selectedKey);
+        }
+
+        OnPropertyChanged(nameof(HasPlayers));
+        OnPropertyChanged(nameof(PlayersHeading));
+        return true;
+    }
+
+    private static bool RosterChanged(MatchSession before, MatchSession after)
+    {
+        if (before.Participants.Count != after.Participants.Count)
+        {
+            return true;
+        }
+
+        var previous = before.Participants.ToDictionary(participant => participant.ParticipantKey, StringComparer.Ordinal);
+        foreach (Participant participant in after.Participants)
+        {
+            if (!previous.TryGetValue(participant.ParticipantKey, out Participant? old))
+            {
+                return true;
+            }
+
+            if (old.Visibility != participant.Visibility
+                || !string.Equals(old.CurrentDisplayId, participant.CurrentDisplayId, StringComparison.Ordinal)
+                || !string.Equals(old.Champion, participant.Champion, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public EndOfGamePlayerViewModel? SelectedPlayer
     {

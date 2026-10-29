@@ -9,6 +9,7 @@ public sealed partial class MainViewModel
     private readonly HashSet<string> _finishedMatches = new(StringComparer.Ordinal);
     private MatchRosterSnapshot? _matchSnapshot;
     private MatchRosterSnapshot? _observedMatchSnapshot;
+    private MatchSession? _lastFinishedSession;
     private DateTimeOffset? _lastMatchFinishedAt;
     private EndOfGameViewModel? _endOfGame;
     private bool _endOfGameOpenedManually;
@@ -67,6 +68,9 @@ public sealed partial class MainViewModel
 
         if (ReminderPolicy.IsFinishedPhase(session.Phase))
         {
+            // The client reveals hidden summoner names once the match is over, so the
+            // newest finished observation is the authoritative roster for this match.
+            _lastFinishedSession = session;
             if (!IsSameMatch(_matchSnapshot, session))
             {
                 _endOfGameGeneration++;
@@ -77,6 +81,7 @@ public sealed partial class MainViewModel
             }
             Current.RefreshLastMatchState();
             if (HasMatchSnapshot) await PromptEndOfMatchAsync(_matchSnapshot!).ConfigureAwait(true);
+            _endOfGame?.RefreshRoster(session);
             return;
         }
 
@@ -86,6 +91,16 @@ public sealed partial class MainViewModel
 
     private static bool IsSameMatch(MatchRosterSnapshot? snapshot, MatchSession session) => snapshot is not null
         && (snapshot.LocalSessionId == session.LocalSessionId || snapshot.IsSameMatch(session));
+
+    /// <summary>
+    /// Newest finished observation of the same match, which carries the summoner names
+    /// the client only reveals after the game ends.
+    /// </summary>
+    private MatchSession LatestFinishedSession(MatchSession fallback) => _lastFinishedSession is { } latest
+        && (string.Equals(latest.MatchKey, fallback.MatchKey, StringComparison.Ordinal)
+            || string.Equals(latest.LocalSessionId, fallback.LocalSessionId, StringComparison.Ordinal))
+        ? latest
+        : fallback;
 
     private void ExpireLastMatch()
     {
@@ -112,12 +127,13 @@ public sealed partial class MainViewModel
         try
         {
             using WorkspaceLease lease = await AcquireWorkspaceAsync().ConfigureAwait(true);
+            MatchSession target = LatestFinishedSession(snapshot.Session);
             IReadOnlyList<Reminder> reminders = await lease.Notebook
-                .FindRemindersAsync(snapshot.Session)
+                .FindRemindersAsync(target)
                 .ConfigureAwait(true);
             if (reminders.Count == 0 || _endOfGame is not null
                 || !IsEndOfGameContextCurrent(snapshot, generation, profileId, lease.Notebook)) return;
-            OpenEndOfGame(snapshot.WithReminders(snapshot.Session, reminders), lease.Notebook, manually: false);
+            OpenEndOfGame(snapshot.WithReminders(target, reminders), lease.Notebook, manually: false);
         }
         catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException)
         {
@@ -198,11 +214,12 @@ public sealed partial class MainViewModel
         try
         {
             using WorkspaceLease lease = await AcquireWorkspaceAsync().ConfigureAwait(true);
+            MatchSession target = LatestFinishedSession(snapshot.Session);
             IReadOnlyList<Reminder> reminders = await lease.Notebook
-                .FindRemindersAsync(snapshot.Session)
+                .FindRemindersAsync(target)
                 .ConfigureAwait(true);
             if (!IsEndOfGameContextCurrent(snapshot, generation, profileId, lease.Notebook)) return false;
-            OpenEndOfGame(snapshot.WithReminders(snapshot.Session, reminders), lease.Notebook, manually: true);
+            OpenEndOfGame(snapshot.WithReminders(target, reminders), lease.Notebook, manually: true);
             return true;
         }
         catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException)
@@ -234,6 +251,7 @@ public sealed partial class MainViewModel
         CloseEndOfGame();
         _matchSnapshot = null;
         _observedMatchSnapshot = null;
+        _lastFinishedSession = null;
         _lastMatchFinishedAt = null;
         _lastMatchExpired = false;
         _finishedMatches.Clear();
