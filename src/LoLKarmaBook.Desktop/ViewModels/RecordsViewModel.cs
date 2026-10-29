@@ -382,6 +382,11 @@ public sealed class RecordsViewModel : ObservableObject
             _main.Status.Success($"{action}成功：{NotePresenter.StatusLabel(updated.Status)}。");
             await RefreshAsync().ConfigureAwait(true);
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("is not allowed", StringComparison.Ordinal))
+        {
+            _main.Status.Warn("这条记录的状态刚刚变过，当前操作不适用；请刷新后重试。");
+            await RefreshAsync().ConfigureAwait(true);
+        }
         catch (Exception ex)
         {
             _main.ShowError(ex, action + "失败（可能是记录已被其他窗口修改）");

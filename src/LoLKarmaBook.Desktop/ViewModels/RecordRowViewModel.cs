@@ -53,22 +53,16 @@ public sealed class RecordRowViewModel : ObservableObject
         EditDisabledReason = IsEditable
             ? string.Empty
             : NotePresenter.DisabledReason("只有生效中或草稿状态的记录可以编辑；已归档/已撤回的记录请先新建。");
-        PublishCommand = new AsyncRelayCommand(
-            () => actions.PublishAsync(this),
-            onException: actions.Report);
+        PublishCommand = new AsyncRelayCommand(() => actions.PublishAsync(this), () => IsDraft, onException: actions.Report);
         PublishDisabledReason = IsDraft ? string.Empty : "仅草稿可以发布为生效记录。";
-        ArchiveCommand = new AsyncRelayCommand(
-            () => actions.ArchiveAsync(this),
-            onException: actions.Report);
+        ArchiveCommand = new AsyncRelayCommand(() => actions.ArchiveAsync(this), () => Note.Status is NoteStatus.Active or NoteStatus.Draft, onException: actions.Report);
         ArchiveDisabledReason = Note.Status is NoteStatus.Active or NoteStatus.Draft
             ? string.Empty
             : "已归档或已撤回的记录不能再归档。";
-        RetractCommand = new AsyncRelayCommand(
-            () => actions.RetractAsync(this),
-            onException: actions.Report);
-        RetractDisabledReason = IsActive
+        RetractCommand = new AsyncRelayCommand(() => actions.RetractAsync(this), () => Note.Status is NoteStatus.Active or NoteStatus.Archived, onException: actions.Report);
+        RetractDisabledReason = Note.Status is NoteStatus.Active or NoteStatus.Archived
             ? string.Empty
-            : "只有生效中的记录可以撤回。";
+            : "只有生效中或已归档的记录可以撤回。";
         DeleteCommand = new AsyncRelayCommand(
             () => actions.DeleteAsync(this),
             onException: actions.Report);

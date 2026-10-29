@@ -37,12 +37,49 @@
       <TextBlock Text="{Binding BodyCountText}" Style="{StaticResource Text.Muted}" Margin="0,4,0,0"
                  HorizontalAlignment="Right" />
 
-      <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-        <TextBlock Text="提醒有效期（天）" Style="{StaticResource Text.Label}" VerticalAlignment="Center" />
+      <TextBlock Text="标签（英雄 / 装备，可模糊搜索）" Style="{StaticResource Text.Label}" Margin="0,12,0,6" />
+      <ItemsControl ItemsSource="{Binding Tags}" Margin="0,0,0,6">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:TagChipViewModel}">
+            <Button Style="{StaticResource Button.Row}" Command="{Binding RemoveCommand}"
+                    Content="{Binding DisplayName}" Margin="0,0,6,6"
+                    AutomationProperties.Name="{Binding RemoveLabel}"
+                    ToolTip="点击移除这个标签" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBox Text="{Binding TagQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+               AutomationProperties.Name="搜索英雄或装备"
+               ToolTip="输入官方名、民间叫法或拼音，例如「无尽」「狐狸」「jyhy」" />
+      <ItemsControl ItemsSource="{Binding TagSuggestions}" Margin="0,6,0,0"
+                    Visibility="{Binding HasTagSuggestions, Converter={StaticResource BoolToVis}}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:TagSuggestionViewModel}">
+            <Button Style="{StaticResource Button.Quiet}" HorizontalContentAlignment="Left"
+                    Command="{Binding DataContext.AddTagCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                    CommandParameter="{Binding}" Margin="0,0,0,2" Padding="8,4">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding KindBadge}" FontWeight="SemiBold" Margin="0,0,6,0" />
+                <TextBlock Text="{Binding DisplayName}" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+        <CheckBox Content="永久有效" IsChecked="{Binding IsPermanentReminder, Mode=TwoWay}"
+                  VerticalAlignment="Center" AutomationProperties.Name="提醒永久有效" />
+        <TextBlock Text="或有效期（天）" Style="{StaticResource Text.Muted}" VerticalAlignment="Center"
+                   Margin="14,0,8,0" />
         <TextBox Text="{Binding ReminderDaysText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Width="90" Margin="10,0,0,0" AutomationProperties.Name="提醒有效期天数" />
-        <TextBlock Text="1–3650，过期只停止提醒，不删除记录。" Style="{StaticResource Text.Muted}"
-                   VerticalAlignment="Center" Margin="10,0,0,0" />
+                 Width="80" IsEnabled="{Binding CanEditReminderDays}"
+                 AutomationProperties.Name="提醒有效期天数" />
       </StackPanel>
 
       <TextBlock Text="{Binding StatusText}" Margin="0,10,0,0" TextWrapping="Wrap"

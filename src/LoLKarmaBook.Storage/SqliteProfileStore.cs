@@ -1517,6 +1517,9 @@ public sealed class SqliteProfileStore : INotebookStore, IAsyncDisposable
             (NoteStatus.Draft, NoteStatus.Retracted) => true,
             (NoteStatus.Active, NoteStatus.Archived) => true,
             (NoteStatus.Active, NoteStatus.Retracted) => true,
+            // Retracting an archived record means the same thing (stop reminders, keep
+            // the record) and users reach for it right after archiving.
+            (NoteStatus.Archived, NoteStatus.Retracted) => true,
             _ => false
         };
 

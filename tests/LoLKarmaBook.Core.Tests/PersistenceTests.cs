@@ -195,6 +195,11 @@ internal static class PersistenceTests
             Check.Equal(NoteStatus.Archived, archived.Status);
             Check.Equal(0, (await service.FindRemindersAsync(scenario.MatchB)).Count);
 
+            // Retracting an archived record is allowed and keeps the record.
+            StoredNote retractedArchived = await service.RetractNoteAsync(archived.NoteId, archived.Revision);
+            Check.Equal(NoteStatus.Retracted, retractedArchived.Status);
+            Check.Equal(0, (await service.FindRemindersAsync(scenario.MatchB)).Count);
+
             StoredNote second = await SaveXInMatchAAsync(service, scenario, requestId: "state-2");
             Check.Equal(1, (await service.FindRemindersAsync(scenario.MatchB)).Count);
 
