@@ -1,8 +1,8 @@
-﻿namespace LoLKarmaBook.Core;
+namespace LoLKarmaBook.Core;
 
 /// <summary>
-/// The five fixed, user-selected note categories in the MVP. None of these is
-/// inferred from score, KDA, items or automation.
+/// The fixed, user-selected note categories. None of these is inferred from score,
+/// KDA, items or automation.
 /// </summary>
 public enum NoteCategory
 {
@@ -11,7 +11,8 @@ public enum NoteCategory
     VerbalAbuse = 3,
     LowSkill = 4,
     OddBuild = 5,
-    RandomChampion = 6
+    RandomChampion = 6,
+    Vendetta = 7
 }
 
 public static class NoteCategories
@@ -25,7 +26,9 @@ public static class NoteCategories
         NoteCategory.PassivePlay,
         NoteCategory.VerbalAbuse,
         NoteCategory.LowSkill,
-        NoteCategory.OddBuild
+        NoteCategory.OddBuild,
+        NoteCategory.RandomChampion,
+        NoteCategory.Vendetta
     });
 
     public static string GetCode(NoteCategory category) => category switch
@@ -36,6 +39,7 @@ public static class NoteCategories
         NoteCategory.LowSkill => "LOW_SKILL",
         NoteCategory.OddBuild => "ODD_BUILD",
         NoteCategory.RandomChampion => "RANDOM_CHAMPION",
+        NoteCategory.Vendetta => "VENDETTA",
         _ => throw new ArgumentOutOfRangeException(nameof(category), category, "Unknown note category.")
     };
 
@@ -47,6 +51,7 @@ public static class NoteCategories
         NoteCategory.LowSkill => "游戏技术水平较低",
         NoteCategory.OddBuild => "乱出装",
         NoteCategory.RandomChampion => "乱选英雄",
+        NoteCategory.Vendetta => "仇杀",
         _ => throw new ArgumentOutOfRangeException(nameof(category), category, "Unknown note category.")
     };
 
@@ -71,5 +76,5 @@ public static class NoteCategories
     }
 
     public static bool IsDefined(NoteCategory category) =>
-        category is >= NoteCategory.AfkLeave and <= NoteCategory.RandomChampion;
+        category is >= NoteCategory.AfkLeave and <= NoteCategory.Vendetta;
 }

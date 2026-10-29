@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using LoLKarmaBook.Core;
@@ -378,6 +378,8 @@ public sealed class CategoryChoiceViewModel : ObservableObject
         NoteCategory.VerbalAbuse => "备注：简述情境，无需复制完整聊天",
         NoteCategory.LowSkill => "备注：英雄、位置、具体操作（仅对当局）",
         NoteCategory.OddBuild => "备注：具体装备及当时情境",
+        NoteCategory.RandomChampion => "备注：选了完全不合适的英雄及原因",
+        NoteCategory.Vendetta => "备注：针对谁、如何针对、发生时间",
         _ => string.Empty
     };
 

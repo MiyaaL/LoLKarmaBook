@@ -1,4 +1,4 @@
-using LoLKarmaBook.Core.Tests;
+﻿using LoLKarmaBook.Core.Tests;
 
 internal static class Program
 {
@@ -8,6 +8,7 @@ internal static class Program
         ("Persist.SaveAndReopen", PersistenceTests.SaveAndReopen_PersistsNoteWithDefault365Days),
         ("Persist.IdempotentRequest", PersistenceTests.SaveIsIdempotent_AndConflictingRequestIdFails),
         ("Persist.EditRevisionAndInvalid", PersistenceTests.Edit_RevisionConflictAndInvalidInputLeaveNoteIntact),
+        ("Category.NewOnes", () => CategoryTests.NewCategories_AreSelectableAndPersist()),
         ("Persist.ArchiveRetractDelete", PersistenceTests.ArchiveRetractDelete_ChangeReminderAndListState),
         ("Persist.DraftPublish", PersistenceTests.DraftIsNotRemindable_UntilPublished),
         ("Persist.TransactionRollback", PersistenceTests.TransactionFailureRollsBackNoteAndPlayer),
