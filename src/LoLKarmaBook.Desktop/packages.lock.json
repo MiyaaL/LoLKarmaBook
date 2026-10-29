@@ -55,8 +55,8 @@
       "lolkarmabook.client": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Core": "[1.0.5, )",
-          "LoLKarmaBook.Scoring": "[1.0.5, )"
+          "LoLKarmaBook.Core": "[1.0.1, )",
+          "LoLKarmaBook.Scoring": "[1.0.1, )"
         }
       },
       "lolkarmabook.core": {
@@ -68,13 +68,13 @@
       "lolkarmabook.hexdata": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Core": "[1.0.5, )"
+          "LoLKarmaBook.Core": "[1.0.1, )"
         }
       },
       "lolkarmabook.riot": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Scoring": "[1.0.5, )"
+          "LoLKarmaBook.Scoring": "[1.0.1, )"
         }
       },
       "lolkarmabook.scoring": {
@@ -83,7 +83,7 @@
       "lolkarmabook.storage": {
         "type": "Project",
         "dependencies": {
-          "LoLKarmaBook.Core": "[1.0.5, )",
+          "LoLKarmaBook.Core": "[1.0.1, )",
           "Microsoft.Data.Sqlite": "[10.0.14, )"
         }
       }
