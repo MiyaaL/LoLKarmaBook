@@ -348,6 +348,12 @@ public sealed class EndOfGamePlayerViewModel
         _ => "该玩家没有稳定身份，本应用不会自动匹配。"
     };
 
+    /// <summary>
+    /// Tooltip text, or null when there is nothing to explain. Binding an empty
+    /// string would still pop an empty tooltip box next to the row.
+    /// </summary>
+    public string? TooltipText => string.IsNullOrWhiteSpace(DisabledReason) ? null : DisabledReason;
+
     public bool IsSelf => Participant.IsSelf;
 }
 
