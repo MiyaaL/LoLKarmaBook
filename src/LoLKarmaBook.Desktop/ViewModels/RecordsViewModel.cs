@@ -287,8 +287,9 @@ public sealed class RecordsViewModel : ObservableObject
 
     private async Task EditAsync(RecordRowViewModel row)
     {
-        // The edit form lives on 当前对局 because a note must be bound to a real
-        // participant row (never to a name).
+        // Inside a match the note is edited on 当前对局 so it stays bound to a real
+        // participant row. Outside a match there is no roster to bind to, so the
+        // record is edited on its own instead of refusing the action.
         bool opened = await _main.Current.BeginEditAsync(row.Note).ConfigureAwait(true);
         if (opened)
         {
@@ -296,8 +297,18 @@ public sealed class RecordsViewModel : ObservableObject
             _main.Status.Show(
                 "已在「当前对局」打开这条记录的编辑表单。注意：编辑会更新事件时间；如需保留原时间请勿修改。",
                 StatusSeverity.Info);
+            return;
+        }
+
+        if (OpenStandaloneEditor is { } editor && await editor(row.Note).ConfigureAwait(true))
+        {
+            _main.Status.Success("记录已更新。");
+            await RefreshAsync().ConfigureAwait(true);
         }
     }
+
+    /// <summary>Host-provided editor for records whose player is not in the current roster.</summary>
+    public Func<StoredNote, Task<bool>>? OpenStandaloneEditor { get; set; }
 
     private async Task PublishAsync(RecordRowViewModel row) =>
         await UpdateStatusAsync(row, "发布草稿", n => n.PublishDraftAsync(row.NoteId, row.Note.Revision))

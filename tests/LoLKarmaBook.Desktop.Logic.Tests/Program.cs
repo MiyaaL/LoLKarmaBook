@@ -1,4 +1,4 @@
-using LoLKarmaBook.Core;
+﻿using LoLKarmaBook.Core;
 using LoLKarmaBook.Desktop.Infrastructure;
 using LoLKarmaBook.Desktop.Security;
 using LoLKarmaBook.Desktop.Services;
@@ -789,7 +789,27 @@ var tests = new (string Name, Func<Task> Run)[]
 
         await Task.CompletedTask;
     }),
-    ("设置写入失败不会显示成功", () => WithMain((main, _, _) =>
+    ("记录在没有对局名单时也能单独编辑", () => WithMain(async (main, _, _) =>
+    {
+        try
+        {
+            var scenario = new SyntheticScenario();
+            StoredNote note = await main.Notebook.SaveNoteAsync(scenario.MatchA, SyntheticScenario.MatchAXParticipantKey,
+                new NoteDraft("offline-edit-1", new[] { NoteCategory.OddBuild }, "原始备注"));
+            var edit = new NoteEditViewModel(main, note);
+            edit.Body = "改过的备注";
+            edit.Categories.First(c => c.Category == NoteCategory.OddBuild).IsSelected = true;
+            await Run(edit.SaveCommand);
+            Require(edit.WasSaved, "单独编辑没有保存成功。");
+            StoredNote? reloaded = await main.Notebook.GetNoteAsync(note.NoteId);
+            Require(reloaded is not null && reloaded.Body == "改过的备注" && reloaded.Revision == note.Revision + 1,
+                "单独编辑没有写入备注或版本。");
+        }
+        catch (Exception ex)
+        {
+            Require(false, ex.ToString());
+        }
+    })),    ("设置写入失败不会显示成功", () => WithMain((main, _, _) =>
     {
         var path = main.Paths.SettingsFile;
         if (File.Exists(path)) File.Delete(path);

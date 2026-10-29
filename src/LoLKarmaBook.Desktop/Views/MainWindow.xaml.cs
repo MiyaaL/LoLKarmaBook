@@ -60,6 +60,7 @@ public partial class MainWindow : Window
         };
 
         Confirmation.Handler = AskConfirmation;
+        main.Records.OpenStandaloneEditor = ShowNoteEditorAsync;
         main.Hexdata.OpenLoginPage = OpenHexdataLogin;
         main.Hexdata.ReadSessionAsync = ReadHexdataSessionAsync;
         main.Hexdata.CurrentGameId = () => main.LatestAccountLabel;
@@ -401,6 +402,16 @@ public partial class MainWindow : Window
         try { return await _hexdataLogin.ReadAsync(TimeSpan.FromSeconds(15)); }
         catch (LoLKarmaBook.Hexdata.HexdataException ex) { _main.Status.Warn(ex.Message); return null; }
     }
+    /// <summary>Edits a stored record that has no row in the current match roster.</summary>
+    private async Task<bool> ShowNoteEditorAsync(LoLKarmaBook.Core.StoredNote note)
+    {
+        var viewModel = new NoteEditViewModel(_main, note);
+        var window = new NoteEditWindow(viewModel) { Owner = this };
+        bool saved = window.ShowDialog() == true;
+        await Task.CompletedTask;
+        return saved;
+    }
+
 
     private void OpenFolder(string path)
     {
