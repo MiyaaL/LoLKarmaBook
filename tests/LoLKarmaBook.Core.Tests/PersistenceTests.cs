@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using LoLKarmaBook.Core;
 using LoLKarmaBook.Storage;
 using static LoLKarmaBook.Core.Tests.TestSupport;
@@ -464,7 +464,7 @@ internal static class PersistenceTests
             await connection.OpenAsync();
             await using SqliteCommand version = connection.CreateCommand();
             version.CommandText = "SELECT value FROM meta WHERE key = 'schema_version';";
-            Check.Equal("4", (string?)await version.ExecuteScalarAsync(), "the profile must be upgraded in place");
+            Check.Equal("6", (string?)await version.ExecuteScalarAsync(), "the profile must be upgraded in place");
             await using SqliteCommand column = connection.CreateCommand();
             column.CommandText = "SELECT COUNT(*) FROM pragma_table_info('notes') WHERE name = 'player_display_name_protected';";
             Check.Equal(1L, Convert.ToInt64(await column.ExecuteScalarAsync()), "the new column must exist");
@@ -637,7 +637,7 @@ internal static class PersistenceTests
             await connection.OpenAsync();
             await using SqliteCommand version = connection.CreateCommand();
             version.CommandText = "SELECT value FROM meta WHERE key = 'schema_version';";
-            Check.Equal("4", (string?)await version.ExecuteScalarAsync(), "the profile must be upgraded in place");
+            Check.Equal("6", (string?)await version.ExecuteScalarAsync(), "the profile must be upgraded in place");
             await using SqliteCommand table = connection.CreateCommand();
             table.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'note_tags';";
             Check.Equal(1L, Convert.ToInt64(await table.ExecuteScalarAsync()), "the tag table must be created");
@@ -654,6 +654,61 @@ internal static class PersistenceTests
         finally
         {
             await upgraded.DisposeAsync();
+        }
+    }
+
+    public static async Task PermanentReminder_KeepsReminding()
+    {
+        using var temp = new TempDirectory();
+        using var protector = CreateProtector();
+        var clock = new TestClock();
+        var scenario = new SyntheticScenario();
+        var store = await OpenStoreAsync(temp.Combine("root"), "permanent", protector);
+        try
+        {
+            var service = new NotebookService(store, clock);
+            await service.SaveNoteAsync(scenario.MatchA, SyntheticScenario.MatchAXParticipantKey,
+                Draft(requestId: "permanent-1", reminderDays: 0));
+
+            clock.Advance(TimeSpan.FromDays(730));
+            IReadOnlyList<Reminder> reminders = (await service.EvaluateRemindersAsync(scenario.MatchB)).Reminders;
+            Check.Equal(1, reminders.Count, "a permanent reminder expired");
+        }
+        finally
+        {
+            await store.DisposeAsync();
+        }
+    }
+
+    public static async Task RepeatedSaves_MergeIntoOneRecord()
+    {
+        using var temp = new TempDirectory();
+        using var protector = CreateProtector();
+        var clock = new TestClock();
+        var scenario = new SyntheticScenario();
+        var store = await OpenStoreAsync(temp.Combine("root"), "merge", protector);
+        try
+        {
+            var service = new NotebookService(store, clock);
+            StoredNote first = await service.SaveNoteAsync(scenario.MatchA, SyntheticScenario.MatchAXParticipantKey,
+                Draft(requestId: "merge-1", categories: new[] { NoteCategory.OddBuild }));
+            clock.Advance(TimeSpan.FromHours(1));
+            StoredNote merged = await service.SaveNoteAsync(scenario.MatchB,
+                SyntheticScenario.MatchBRenamedXParticipantKey,
+                Draft(requestId: "merge-2", categories: new[] { NoteCategory.VerbalAbuse }, merge: true));
+
+            IReadOnlyList<StoredNote> notes = await service.ListNotesAsync();
+            Check.Equal(1, notes.Count, "the second encounter created a second record");
+            Check.Equal(first.NoteId, merged.NoteId);
+            Check.Equal(2, merged.Revision);
+            Check.Equal(2, merged.Categories.Count);
+            Check.True(merged.Categories.Any(entry => entry.Category == NoteCategory.OddBuild)
+                       && merged.Categories.Any(entry => entry.Category == NoteCategory.VerbalAbuse),
+                "categories were not merged");
+        }
+        finally
+        {
+            await store.DisposeAsync();
         }
     }
 }

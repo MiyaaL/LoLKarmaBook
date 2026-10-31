@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.Sqlite;
@@ -20,8 +20,10 @@ public sealed class SqliteProfileStore : INotebookStore, IAsyncDisposable
     /// v1: SHA-256 value index (unreleased demo). v2: keyed HMAC identity index
     /// with a random per-profile lookup key protected by the injected protector.
     /// v3: the player's in-game id on each note. v4: official champion/item tags.
+    /// v5: permanent reminders ("0 days") stop expiring on the creation second.
+    /// v6: duplicate active records of one player are merged into a single record.
     /// </summary>
-    private const int SchemaVersion = 4;
+    private const int SchemaVersion = 6;
 
     /// <summary>Schema version written by this build.</summary>
     internal static int CurrentSchemaVersion => SchemaVersion;
@@ -1011,7 +1013,7 @@ public sealed class SqliteProfileStore : INotebookStore, IAsyncDisposable
         // Schema v1 used a bare SHA-256 identity index. This is an unreleased
         // synthetic demo, so instead of silently rewriting user data we refuse to
         // open and leave the file untouched.
-        if (fromVersion is not (2 or 3))
+        if (fromVersion is < 2 or > 5)
         {
             throw new InvalidOperationException(
                 $"The database uses schema version {fromVersion}, but this build supports {SchemaVersion}. " +
@@ -1060,6 +1062,48 @@ public sealed class SqliteProfileStore : INotebookStore, IAsyncDisposable
                 version = 4;
             }
 
+            if (version == 4)
+            {
+                // v5: a permanent reminder (0 days) used to be stored as "expires right
+                // now", so those notes never reminded. Move them to the far date the
+                // current code uses for permanent reminders.
+                var repaired = new List<(string NoteId, DateTimeOffset CreatedAt)>();
+                using (SqliteCommand select = CreateCommand(
+                           connection,
+                           transaction,
+                           "SELECT note_id, created_at FROM notes WHERE reminder_days = 0;"))
+                using (SqliteDataReader reader = await select.ExecuteReaderAsync(cancellationToken)
+                           .ConfigureAwait(false))
+                {
+                    while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        repaired.Add((reader.GetString(0), ParseTime(reader.GetString(1))));
+                    }
+                }
+
+                foreach ((string noteId, DateTimeOffset createdAt) in repaired)
+                {
+                    using SqliteCommand repair = CreateCommand(
+                        connection,
+                        transaction,
+                        "UPDATE note_categories SET reminder_expires_at = $expires WHERE note_id = $note_id;");
+                    AddParameter(repair, "$expires", FormatTime(createdAt.AddDays(36500)));
+                    AddParameter(repair, "$note_id", noteId);
+                    await repair.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                version = 5;
+            }
+
+            if (version == 5)
+            {
+                // v6 folds the duplicate records the old save path left behind: one
+                // active record per player, with every category and tag preserved.
+                await MergeDuplicateActiveNotesAsync(connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
+                version = 6;
+            }
+
             using (SqliteCommand update = CreateCommand(
                        connection,
                        transaction,
@@ -1078,6 +1122,100 @@ public sealed class SqliteProfileStore : INotebookStore, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Older builds created a new record on every encounter. Fold those duplicates
+    /// into the newest active record per player, keeping every category and tag.
+    /// </summary>
+    private static async Task MergeDuplicateActiveNotesAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var players = new List<string>();
+        using (SqliteCommand select = CreateCommand(
+                   connection,
+                   transaction,
+                   "SELECT player_id FROM notes WHERE status = 2 AND player_id IS NOT NULL " +
+                   "GROUP BY player_id HAVING COUNT(*) > 1;"))
+        using (SqliteDataReader reader = await select.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                players.Add(reader.GetString(0));
+            }
+        }
+
+        foreach (string playerId in players)
+        {
+            var notes = new List<string>();
+            using (SqliteCommand select = CreateCommand(
+                       connection,
+                       transaction,
+                       "SELECT note_id FROM notes WHERE player_id = $player AND status = 2 " +
+                       "ORDER BY updated_at DESC, note_id;"))
+            {
+                AddParameter(select, "$player", playerId);
+                using SqliteDataReader reader = await select.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    notes.Add(reader.GetString(0));
+                }
+            }
+
+            if (notes.Count < 2)
+            {
+                continue;
+            }
+
+            string keep = notes[0];
+            foreach (string duplicate in notes.Skip(1))
+            {
+                using (SqliteCommand categories = CreateCommand(
+                           connection,
+                           transaction,
+                           """
+                           INSERT INTO note_categories (note_id, category, reminder_expires_at)
+                           SELECT $keep, category, reminder_expires_at FROM note_categories
+                           WHERE note_id = $other AND 1 = 1
+                           ON CONFLICT(note_id, category) DO UPDATE SET reminder_expires_at =
+                               MAX(reminder_expires_at, excluded.reminder_expires_at);
+                           """))
+                {
+                    AddParameter(categories, "$keep", keep);
+                    AddParameter(categories, "$other", duplicate);
+                    await categories.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                using (SqliteCommand tags = CreateCommand(
+                           connection,
+                           transaction,
+                           """
+                           INSERT OR REPLACE INTO note_tags (note_id, kind, ref_id, official_name)
+                           SELECT $keep, kind, ref_id, official_name FROM note_tags WHERE note_id = $other;
+                           """))
+                {
+                    AddParameter(tags, "$keep", keep);
+                    AddParameter(tags, "$other", duplicate);
+                    await tags.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                // Categories, tags and journal rows cascade with the note row.
+                using SqliteCommand drop = CreateCommand(
+                    connection,
+                    transaction,
+                    "DELETE FROM notes WHERE note_id = $other;");
+                AddParameter(drop, "$other", duplicate);
+                await drop.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            using SqliteCommand bump = CreateCommand(
+                connection,
+                transaction,
+                "UPDATE notes SET revision = revision + 1 WHERE note_id = $keep;");
+            AddParameter(bump, "$keep", keep);
+            await bump.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
     private async Task CreateSchemaAsync(
         SqliteConnection connection,
         CancellationToken cancellationToken)

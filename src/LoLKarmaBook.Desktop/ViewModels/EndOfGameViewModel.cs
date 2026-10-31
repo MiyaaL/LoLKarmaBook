@@ -325,7 +325,8 @@ public sealed class EndOfGameViewModel : ObservableObject
                     string.IsNullOrWhiteSpace(_body) ? null : _body,
                     _snapshot.Session.ObservedAt,
                     _main.PersistedSettings.DefaultReminderDays,
-                    _tags.Select(chip => chip.Tag).ToArray()));
+                    _tags.Select(chip => chip.Tag).ToArray(),
+                    MergeWithExisting: true));
 
             // Another participant may be marked from the same window.
             foreach (CategoryChoiceViewModel choice in Categories) choice.IsSelected = false;

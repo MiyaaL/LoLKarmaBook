@@ -84,14 +84,16 @@ internal static class TestSupport
         IReadOnlyList<NoteCategory>? categories = null,
         string? body = null,
         DateTimeOffset? eventTime = null,
-        int reminderDays = NoteCategories.DefaultReminderDays)
+        int reminderDays = NoteCategories.DefaultReminderDays,
+        bool merge = false)
     {
         return new NoteDraft(
             requestId ?? Guid.NewGuid().ToString("N"),
             categories ?? new[] { NoteCategory.AfkLeave },
             body,
             eventTime,
-            reminderDays);
+            reminderDays,
+            MergeWithExisting: merge);
     }
 
     public static async Task<StoredNote> SaveXInMatchAAsync(

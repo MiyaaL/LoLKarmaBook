@@ -32,7 +32,8 @@ public sealed record NoteDraft(
     string? Body = null,
     DateTimeOffset? EventTime = null,
     int ReminderDays = NoteCategories.DefaultReminderDays,
-    IReadOnlyList<NoteTag>? Tags = null);
+    IReadOnlyList<NoteTag>? Tags = null,
+    bool MergeWithExisting = false);
 
 /// <summary>Input for editing an existing active/draft note.</summary>
 public sealed record NoteEdit(

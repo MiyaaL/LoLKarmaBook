@@ -14,6 +14,9 @@ public sealed class NotebookService
     private const int MaxBodyLength = 500;
     private const int MaxRequestIdLength = 128;
     private const int MaxReminderDays = 3650;
+
+    /// <summary>Reminder days of zero mean permanent; stored as a far-future date.</summary>
+    private const int PermanentReminderDays = 36500;
     private const int MaxTags = 12;
     private const int MaxTagNameLength = 60;
     private static readonly TimeSpan FutureEventTolerance = TimeSpan.FromMinutes(10);
@@ -83,8 +86,26 @@ public sealed class NotebookService
             mode,
             tags);
 
+        // One record per player: the live marking UIs ask to merge, so meeting the same
+        // player again updates the active record instead of stacking duplicates.
+        if (draft.MergeWithExisting && identity is not null && mode == NoteSaveMode.Active)
+        {
+            StoredNote? existing = await FindActiveNoteAsync(identity, cancellationToken).ConfigureAwait(false);
+            if (existing is not null)
+            {
+                NoteCategory[] mergedCategories = existing.Categories.Select(entry => entry.Category)
+                    .Union(categories).ToArray();
+                NoteTag[] mergedTags = existing.Tags.Concat(tags)
+                    .DistinctBy(tag => (tag.Kind, tag.RefId)).ToArray();
+                string mergedBody = body.Length > 0 ? body : existing.Body;
+                return await UpdateNoteAsync(existing.NoteId, existing.Revision,
+                    new NoteEdit(mergedCategories, mergedBody, eventTime, reminderDays, mergedTags),
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+
         NoteCategoryEntry[] expiries = categories
-            .Select(category => new NoteCategoryEntry(category, now.AddDays(reminderDays)))
+            .Select(category => new NoteCategoryEntry(category, ExpiryFor(now, reminderDays)))
             .ToArray();
 
         var record = new NewNoteRecord(
@@ -104,6 +125,25 @@ public sealed class NotebookService
             tags);
 
         return await _store.CreateNoteAsync(record, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Zero days means permanent, which must not expire immediately.</summary>
+    private static DateTimeOffset ExpiryFor(DateTimeOffset now, int reminderDays) =>
+        reminderDays <= 0 ? now.AddDays(PermanentReminderDays) : now.AddDays(reminderDays);
+
+    /// <summary>The active record already kept for this player, if any.</summary>
+    private async Task<StoredNote?> FindActiveNoteAsync(PlayerIdentity identity, CancellationToken cancellationToken)
+    {
+        Guid? playerId = await _store.FindPlayerIdAsync(identity, cancellationToken).ConfigureAwait(false);
+        if (playerId is null)
+        {
+            return null;
+        }
+
+        IReadOnlyList<StoredNote> notes = await _store
+            .ListNotesAsync(new NoteQuery { Status = NoteStatus.Active, PlayerId = playerId }, cancellationToken)
+            .ConfigureAwait(false);
+        return notes.OrderByDescending(note => note.UpdatedAt).FirstOrDefault();
     }
 
     public async Task<StoredNote> UpdateNoteAsync(
@@ -131,7 +171,7 @@ public sealed class NotebookService
         DateTimeOffset eventTime = ResolveEventTime(edit.EventTime, now);
 
         NoteCategoryEntry[] expiries = categories
-            .Select(category => new NoteCategoryEntry(category, now.AddDays(reminderDays)))
+            .Select(category => new NoteCategoryEntry(category, ExpiryFor(now, reminderDays)))
             .ToArray();
 
         var record = new NoteUpdateRecord(

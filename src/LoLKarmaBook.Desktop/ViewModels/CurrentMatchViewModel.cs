@@ -1094,7 +1094,8 @@ public sealed partial class CurrentMatchViewModel : ObservableObject
             else
             {
                 string requestId = _pendingRequestId.ToString("N");
-                var draft = new NoteDraft(requestId, categories, NoteBody, eventTime, ReminderDays, SelectedTags());
+                var draft = new NoteDraft(requestId, categories, NoteBody, eventTime, ReminderDays, SelectedTags(),
+                    MergeWithExisting: true);
                 // Write the pending id before the commit so a restart after an
                 // uncertain result still retries the same request.
                 SaveDraftNow();

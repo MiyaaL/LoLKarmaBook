@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 using LoLKarmaBook.Core;
@@ -227,9 +227,9 @@ public static class SqliteProfileMaintenance
 
     /// <summary>
     /// Schema version accepted by restore. Kept in sync with
-    /// <c>SqliteProfileStore</c> (currently 4) via the storage test suite.
+    /// <c>SqliteProfileStore</c> (currently 6) via the storage test suite.
     /// </summary>
-    internal const int RequiredSchemaVersion = 4;
+    internal const int RequiredSchemaVersion = 6;
 
     /// <summary>
     /// The oldest backup this build still restores. Older files are opened by the

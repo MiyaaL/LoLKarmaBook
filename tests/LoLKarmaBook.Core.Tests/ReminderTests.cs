@@ -323,7 +323,13 @@ internal static class ReminderTests
                 scenario.MatchA,
                 SyntheticScenario.MatchAXParticipantKey,
                 Draft(reminderDays: 0));
-            Check.Equal(0, (await service.FindRemindersAsync(scenario.MatchB)).Count);
+
+            // 0 days is the product's "permanent" reminder, so it must survive time.
+            clock.Advance(TimeSpan.FromDays(400));
+            Check.Equal(
+                1,
+                (await service.FindRemindersAsync(scenario.MatchB)).Count,
+                "a permanent reminder must keep reminding");
 
             await Check.ThrowsAsync<ArgumentOutOfRangeException>(
                 () => service.SaveNoteAsync(

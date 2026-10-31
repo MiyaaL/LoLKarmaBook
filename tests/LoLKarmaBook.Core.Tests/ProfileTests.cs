@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using LoLKarmaBook.Core;
 using LoLKarmaBook.Storage;
 using static LoLKarmaBook.Core.Tests.TestSupport;
@@ -470,10 +470,10 @@ internal static class ProfileTests
         await AssertRestoreRejectedAndTargetIntactAsync(v1Backup, target, protector, "schema version 1");
 
         // 3. A newer schema version must also be rejected.
-        string v5Backup = temp.Combine("v5.db");
-        await SqliteProfileMaintenance.BackupAsync(target, v5Backup, "restore");
-        await ExecuteSqlAsync(v5Backup, "UPDATE meta SET value = '5' WHERE key = 'schema_version';");
-        await AssertRestoreRejectedAndTargetIntactAsync(v5Backup, target, protector, "schema version 5");
+        string v7Backup = temp.Combine("v7.db");
+        await SqliteProfileMaintenance.BackupAsync(target, v7Backup, "restore");
+        await ExecuteSqlAsync(v7Backup, "UPDATE meta SET value = '7' WHERE key = 'schema_version';");
+        await AssertRestoreRejectedAndTargetIntactAsync(v7Backup, target, protector, "schema version 7");
 
         // 3b. A v2 backup predates the player-name column. It must still restore,
         //     and the store upgrades the restored file when it is opened.
